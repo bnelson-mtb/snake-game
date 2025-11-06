@@ -96,6 +96,10 @@ public sealed class NetworkConnection : IDisposable
     /// <param name="port"> The port, e.g., 11000. </param>
     public void Connect( string host, int port )
     {
+        if (IsConnected)
+        {
+            return;
+        }
         logger.LogInformation( "Connecting to {0}:{1}", host, port );
         _tcpClient.Connect( host, port );
         

@@ -34,7 +34,7 @@ public static class ServerConnection
             TcpClient client = s.AcceptTcpClient();
             logger.LogInformation( "Client connected." );
 
-            NetworkConnection connection = new( client, logger );
+            NetworkConnection connection =  new( client, logger );
 
             if ( !connection.IsConnected )
             {
