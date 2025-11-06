@@ -2,8 +2,10 @@
 // Copyright (c) 2024 UofU-CS3500. All rights reserved.
 // </copyright>
 
+using System.Diagnostics;
 using System.Net.Sockets;
 using System.Text;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 namespace CS3500.Networking;
 
@@ -39,6 +41,8 @@ public sealed class NetworkConnection : IDisposable
     /// </summary>
     private StreamWriter? _writer = StreamWriter.Null;
 
+    private ILogger logger;
+
     /// <summary>
     ///   Initializes a new instance of the <see cref="NetworkConnection"/> class.
     ///   <para>
@@ -51,7 +55,7 @@ public sealed class NetworkConnection : IDisposable
     /// <param name="logger"> The logging element. </param>
     public NetworkConnection( TcpClient tcpClient, ILogger logger )
     {
-        // FIXME: save the logger
+        this.logger = logger;
         _tcpClient = tcpClient;
         if ( IsConnected )
         {
@@ -79,9 +83,8 @@ public sealed class NetworkConnection : IDisposable
     {
         get
         {
-            return false;
-            // TODO: implement this
-            // Reminder: logging is required.
+            logger.LogInformation("TCP Client is {0}!",_tcpClient.Connected ? "Connected" : "Disconnected");
+            return _tcpClient.Connected;
         }
     }
 
@@ -93,8 +96,9 @@ public sealed class NetworkConnection : IDisposable
     /// <param name="port"> The port, e.g., 11000. </param>
     public void Connect( string host, int port )
     {
-        // TODO: implement this
-        throw new NotImplementedException();
+        logger.LogInformation( "Connecting to {0}:{1}", host, port );
+        _tcpClient.Connect( host, port );
+        
     }
 
 
@@ -110,8 +114,12 @@ public sealed class NetworkConnection : IDisposable
     /// <param name="message"> The string of characters to send. </param>
     public void SendLine( string message )
     {
-        // TODO: Implement this
-        throw new NotImplementedException();
+        if (!IsConnected)
+        {
+            logger.LogError("Failed to write message \"{0}\". Client is not connected!", message);
+            throw new InvalidOperationException( "Not connected" );
+        }
+        _writer.WriteLine(message);
     }
 
 
@@ -149,33 +157,43 @@ public sealed class NetworkConnection : IDisposable
     /// </exception>
     public string ReceiveLine( )
     {
-        // TODO: implement this
-        throw new NotImplementedException();
+        if (!IsConnected)
+        {
+            logger.LogError("Failed to receive message. Client is not connected!");
+            throw new InvalidOperationException( "Not connected" );
+        }
 
+        try
+        {
+            if (_reader.ReadLine() is null)
+            {
+                throw new ArgumentNullException();
+            }
+            return _reader.ReadLine();
+        }
+        catch (Exception e)
+        {
+            throw new IOException( "Failed to read message", e );
+        }
     }
 
     /// <summary>
     ///   If connected, disconnect the connection and clean 
     ///   up (dispose) any streams.
-    ///   <para>
-    ///     TODO:
-    ///   </para>
-    ///   <list type="number">
-    ///     <item>
-    ///       Then call the tcpclient object's client.Shutdown method with SocketShutdown.Both.
-    ///     </item>
-    ///     <item>
-    ///       Then dispose the writer and reader.
-    ///     </item>
-    ///     <item>
-    ///       Finally close the tcpclient object.
-    ///     </item>
-    ///   </list>
     /// </summary>
     public void Disconnect( )
     {
-        //TODO: implement this
-        throw new NotImplementedException();
+        _tcpClient.Client.Shutdown(SocketShutdown.Both);
+        
+        logger.LogInformation("Disposing the network streams...");
+        _writer.Dispose();
+        _reader.Dispose();
+        _tcpClient.Dispose();
+        logger.LogInformation("Network streams disposed.");
+        
+        logger.LogInformation("Closing the TCP client...");
+        _tcpClient.Close();
+        logger.LogInformation("TCP client closed.");
     }
 
     /// <summary>
