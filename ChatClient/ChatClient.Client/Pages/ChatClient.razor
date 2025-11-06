@@ -146,7 +146,7 @@
                 spinner = string.Empty;
                 InvokeAsync( () => StateHasChanged() ); 
 
-                // TODO: Send the command message with the name stored in UserName
+                network.SendLine(UserName);
 
                 while ( network.IsConnected )
                 {
