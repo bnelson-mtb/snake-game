@@ -4,7 +4,7 @@ Start Date: 11/5/25
 Course: CS 3500, University of Utah, School of Computing
 GitHub IDs: bnelson-mtb & big-chuz
 Repo: https://github.com/uofu-cs3500-20-fall2025/assignment-eight-chatting-brady_charlie_game
-Commit Date: 11/6/25
+Commit Date: 11/7/25
 Solution: Chatting
 Copyright: CS 3500, Brady Nelson, Charles Adair
 This work may not be copied for use in Academic Coursework.
