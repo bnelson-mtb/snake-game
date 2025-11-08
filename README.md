@@ -11,22 +11,18 @@ This work may not be copied for use in Academic Coursework.
 ```
 
 # Overview of the Chatting functionality
+A simple project that uses Blazor WebAssembly to create a client-server application
+that allows users to connect to a server and chat with other users.
 
 # Time Expenditures:
-1. Assignment Eight - Predicted Hours: 5 - Actual Hours: 
-
-# Examples of Good Software Practice (GSP)
-
-
-# Reflections on the Project
-1. **Time Management**:
-2. **Collaboration**:
-
+1. Assignment Eight - Predicted Hours: 5 - Actual Hours: 5
 
 # Branch History
-#### 
-**Merge Commit ID**: 
-This branch 
+#### network-connection-fix
+**Merge Commit ID**: 933ca30501d7089ab3777d89caadcdc947acc14f
+This branch fixed the double ReadLine() call that skipped messages and added stream
+initialization in Connect() so the reader/writer aren't left null when connecting after
+construction.
 
 # Use of AI*
 **Google NotebookLM**: Used to rephrase and better explain assignment instructions and lectures slides.

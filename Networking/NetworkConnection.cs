@@ -1,12 +1,13 @@
-﻿// <copyright file="NetworkConnection.cs" company="UofU-CS3500">
-// Copyright (c) 2024 UofU-CS3500. All rights reserved.
+﻿// <copyright file="NetworkConnection.cs" company="PlaceholderCompany">
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
 // </copyright>
 
-using System.Diagnostics;
 using System.Net.Sockets;
 using System.Text;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 namespace CS3500.Networking;
 
 /// <summary>
@@ -21,30 +22,30 @@ namespace CS3500.Networking;
 ///   </para>
 ///   <para>
 ///     Implements IDisposable because we want to make sure that any given
-///     network connection is "cleaned up" when we are done with it. 
+///     network connection is "cleaned up" when we are done with it.
 ///   </para>
 /// </summary>
 public sealed class NetworkConnection : IDisposable
 {
     /// <summary>
-    ///   The connection/socket abstraction
+    ///   The connection/socket abstraction.
     /// </summary>
-    private TcpClient _tcpClient = new();
+    private readonly TcpClient _tcpClient = new();
 
     /// <summary>
-    ///   Reading end of the connection
+    ///   The logger.
+    /// </summary>
+    private readonly ILogger _logger;
+
+    /// <summary>
+    ///   Reading end of the connection.
     /// </summary>
     private StreamReader _reader = StreamReader.Null;
 
     /// <summary>
-    ///   Writing end of the connection
+    ///   Writing end of the connection.
     /// </summary>
     private StreamWriter? _writer = StreamWriter.Null;
-
-    /// <summary>
-    ///   The logger
-    /// </summary>
-    private readonly ILogger _logger;
 
     /// <summary>
     ///   Initializes a new instance of the <see cref="NetworkConnection"/> class.
@@ -53,7 +54,7 @@ public sealed class NetworkConnection : IDisposable
     ///   </para>
     /// </summary>
     /// <param name="tcpClient">
-    ///   An already existing TcpClient
+    ///   An already existing TcpClient.
     /// </param>
     /// <param name="logger"> The logging element. </param>
     public NetworkConnection(TcpClient tcpClient, ILogger logger)
@@ -76,6 +77,7 @@ public sealed class NetworkConnection : IDisposable
     ///   <para>
     ///     Create a network connection object.  The tcpClient will be unconnected at the start.
     ///   </para>
+    /// <param name="logger">The logger.</param>>
     /// </summary>
     public NetworkConnection( ILogger logger )
         : this( new TcpClient(), logger )
@@ -100,9 +102,8 @@ public sealed class NetworkConnection : IDisposable
         }
     }
 
-
     /// <summary>
-    ///   Try to connect to the given host:port. 
+    ///   Try to connect to the given host:port.
     /// </summary>
     /// <param name="host"> The URL or IP address, e.g., www.cs.utah.edu, or  127.0.0.1. </param>
     /// <param name="port"> The port, e.g., 11000. </param>
@@ -123,9 +124,7 @@ public sealed class NetworkConnection : IDisposable
         _logger.LogInformation("Connected to {Host}:{Port}.", host, port);
     }
 
-
-
-    /// <summary> 
+    /// <summary>
     ///   Send a message to the remote server.  If the <paramref name="message"/> contains
     ///   new lines, these will be treated on the receiving side as multiple messages.
     ///   This method should attach a newline to the end of the <paramref name="message"/>
@@ -145,7 +144,6 @@ public sealed class NetworkConnection : IDisposable
         _writer.WriteLine(message);
         _logger.LogTrace("Msg broadcasted -> {Message}", message);
     }
-
 
     /// <summary>
     ///   Read a message from the other side of the socket.  The message will contain
@@ -199,6 +197,10 @@ public sealed class NetworkConnection : IDisposable
         return line;
     }
 
+    /// <summary>
+    ///   If connected, disconnect the connection and clean.
+    ///   up (dispose) any streams.
+    /// </summary>
     public void Disconnect()
     {
         if (!IsConnected)
@@ -236,7 +238,7 @@ public sealed class NetworkConnection : IDisposable
     }
 
     /// <summary>
-    ///   Automatically called with a using statement (see IDisposable)
+    ///   Automatically called with a using statement (see IDisposable).
     /// </summary>
     public void Dispose( )
     {
