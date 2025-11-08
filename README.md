@@ -19,7 +19,7 @@ that allows users to connect to a server and chat with other users.
 
 # Branch History
 #### network-connection-fix
-**Merge Commit ID**: 933ca30501d7089ab3777d89caadcdc947acc14f
+**Merge Commit ID**: bbfa6d15ac8d544b2bd2299c506acf685c7d35a4
 This branch fixed the double ReadLine() call that skipped messages and added stream
 initialization in Connect() so the reader/writer aren't left null when connecting after
 construction.
