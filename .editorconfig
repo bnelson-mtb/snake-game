@@ -522,7 +522,6 @@ csharp_prefer_system_threading_lock = true:suggestion
 
 # Tests use the MS Test naming convention of MethodName_StateUnderTest_ExpectedBehavior.  This violates 
 # the camel case rule, so we turn it off for test projects. Only those files that contain the word Tests in them.
-
 # CA1707: Identifiers should not contain underscores
 dotnet_diagnostic.CA1707.severity = none
 

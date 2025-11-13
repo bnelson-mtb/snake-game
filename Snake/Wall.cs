@@ -20,5 +20,5 @@ public class Wall
 
 // TODO: Check to see if at least one of the points is correct
 
-{"wall":1,"p1":{"X":-575,"Y":-575},"p2":{"X":-575,"Y":575}}
+// {"wall":1,"p1":{"X":-575,"Y":-575},"p2":{"X":-575,"Y":575}}
 

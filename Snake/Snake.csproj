@@ -22,4 +22,8 @@
       <None Include="stylecop.json" />
     </ItemGroup>
 
+    <ItemGroup>
+      <EditorConfigFiles Remove=".editorconfig" />
+    </ItemGroup>
+
 </Project>
