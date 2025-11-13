@@ -1,32 +1,26 @@
 ```
-Author: Brady Nelson
-Partner: None
+Authors: Brady Nelson and Charles Adair
 Course: CS 3500, University of Utah, School of Computing
 GitHub ID: bnelson-mtb
-Repo: https://github.com/uofu-cs3500-20-fall2025/spreadsheet-bnelson-mtb
-Date: 9/19/2025
-Project: Formula Class
+Repo: https://github.com/uofu-cs3500-20-fall2025/assignment-eight-chatting-brady_charlie_game
+Date: 11/7/25
+Project: ChatServer
 Copyright: CS 3500 and Brady Nelson - This work may not be copied for
 use in Academic Coursework.
 ```
 
 # Comments to Evaluators:
-The ```Formula``` class parses and evaluates mathematical expressions in infix notation,
-supporting basic arithmetic operations, parentheses, and variables.
+ChatServer is a simple server that allows clients to connect and send messages. It
+receives messages from the client and sends them to all other clients.
 
 # Assignment Specific Topics
 n/a
 
 # Consulted Peers:
-Kent Wilkison
-Lindsey Reese
-Charlie (not sure last name)
-Parker Hollingsed
+n/a
 
 # References:
-1. CodeEasy.io
-2. ChatGPT
-3. Stack Overflow
+n/a
 
 # Use of AI
-- ChatGPT was used to help translate Java knowledge to C#.
+We used ChatGPT to help understand the connection loop and locking functionality.

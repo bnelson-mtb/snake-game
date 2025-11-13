@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 @using CS3500.Networking
 @using System.Text
+@using CS3500.Networking
 @inject ILogger<ChatClient> logger
 
 <PageTitle>Chat Client</PageTitle>
@@ -146,7 +147,7 @@
                 spinner = string.Empty;
                 InvokeAsync( () => StateHasChanged() ); 
 
-                // TODO: Send the command message with the name stored in UserName
+                network.SendLine(UserName);
 
                 while ( network.IsConnected )
                 {
