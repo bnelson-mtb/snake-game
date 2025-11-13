@@ -4,14 +4,13 @@ Course: CS 3500, University of Utah, School of Computing
 GitHub ID: bnelson-mtb
 Repo: https://github.com/uofu-cs3500-20-fall2025/assignment-eight-chatting-brady_charlie_game
 Date: 11/7/25
-Project: Networking
+Project: ChatClient
 Copyright: CS 3500 and Brady Nelson - This work may not be copied for
 use in Academic Coursework.
 ```
 
 # Comments to Evaluators:
-This project contains classes handle connecting to the server as well
-as sending and receiving messages.
+This is a chat client GUI that allows users to chat with other users.
 
 # Assignment Specific Topics
 n/a

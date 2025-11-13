@@ -1,8 +1,9 @@
-﻿// <copyright file="Server.cs" company="UofU-CS3500">
-// Copyright (c) 2024 UofU-CS3500. All rights reserved.
+﻿// <copyright file="ServerConnection.cs" company="PlaceholderCompany">
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
 // </copyright>
 
-using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using Microsoft.Extensions.Logging;
@@ -24,21 +25,22 @@ public static class ServerConnection
     ///   This should be run asynchronously via a new thread.
     /// </param>
     /// <param name="port"> The port (e.g., 11000) to listen on. </param>
-    public static void WaitForConnections( Action<NetworkConnection> handleConnect, int port, ILogger logger )
+    /// <param name="logger">The logger.</param>
+    public static void WaitForConnections(Action<NetworkConnection> handleConnect, int port, ILogger logger)
     {
-        TcpListener s = new TcpListener( IPAddress.Any, port );
+        TcpListener s = new TcpListener(IPAddress.Any, port);
         s.Start();
-        logger.LogInformation( "Server listening on port {0}", port );
+        logger.LogInformation("Server listening on port {0}", port);
         while (true)
         {
             TcpClient client = s.AcceptTcpClient();
-            logger.LogInformation( "Client connected." );
+            logger.LogInformation("Client connected.");
 
-            NetworkConnection connection =  new( client, logger );
+            NetworkConnection connection = new(client, logger);
 
-            if ( !connection.IsConnected )
+            if (!connection.IsConnected)
             {
-                logger.LogWarning( "Connection failed to establish." );
+                logger.LogWarning("Connection failed to establish.");
                 continue;
             }
 
@@ -46,18 +48,18 @@ public static class ServerConnection
             {
                 try
                 {
-                    handleConnect( connection );
+                    handleConnect(connection);
                 }
-                catch ( Exception e )
+                catch (Exception e)
                 {
-                    logger.LogError( "Error in connection handler: {0}", e );
+                    logger.LogError("Error in connection handler: {0}", e);
                 }
                 finally
                 {
                     connection.Disconnect();
-                    logger.LogInformation( "Client disconnect." );
+                    logger.LogInformation("Client disconnect.");
                 }
-            } );
+            });
 
             thread.Start();
         }
