@@ -14,4 +14,12 @@
       </PackageReference>
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\ChatServer\ChatServer.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Include="stylecop.json" />
+    </ItemGroup>
+
 </Project>
