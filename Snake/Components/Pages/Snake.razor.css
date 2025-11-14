@@ -1,0 +1,30 @@
+﻿#myCanvas
+{
+    padding-top: 20px;
+}
+
+.form-check-input:checked
+{
+    background-color: #28a745; /* Green color when checked */
+    border-color: #28a745;
+}
+
+#checkboxes
+{
+    margin-left:200px;
+    margin-top: 50px;
+    width:500px;
+    transform-origin: center;
+    transform: scale(1.5);
+}
+
+.form-check-input
+{
+    background-color: lightgray;
+    border-color: black;
+}
+
+.form-check-label
+{
+    margin-left: 50px;
+}

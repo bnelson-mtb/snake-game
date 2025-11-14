@@ -1,32 +1,61 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
+﻿// <copyright file="Snake.cs" company="UofU-CS3500">
+// Copyright (c) 2025 UofU-CS3500. All rights reserved.
+// </copyright>
 
 using System.Text.Json.Serialization;
 
 namespace Snake;
 
+/// <summary>
+/// Represents a snake.
+/// </summary>
 public class Snake
 {
+    /// <summary>
+    /// Gets or sets the snake's unique identifier.
+    /// </summary>
     [JsonPropertyName("snake")]
-    public int id { get; set; }
+    public int Id { get; set; }
 
+    /// <summary>
+    /// Gets or sets the location of each piece of the snake's body.
+    /// </summary>
     [JsonPropertyName("body")]
-    public List<Point2D> body { get; set; }
+    public List<Point2D> Body { get; set; }
 
+    /// <summary>
+    /// Gets or sets a value indicating whether the snake has died.
+    /// </summary>
     [JsonPropertyName("died")]
-    public bool died { get; set; }
+    public bool Died { get; set; }
 
+    /// <summary>
+    /// Gets or sets a value indicating whether the snake is alive.
+    /// </summary>
+    [JsonPropertyName("alive")]
+    public bool Alive { get; set; }
+
+    /// <summary>
+    /// Gets or sets the snake's name.
+    /// </summary>
     [JsonPropertyName("name")]
-    public string name { get; set; }
+    public string Name { get; set; }
 
+    /// <summary>
+    /// Gets or sets the snake's score.
+    /// </summary>
     [JsonPropertyName("score")]
-    public int score { get; set; }
+    public int Score { get; set; }
 
+    /// <summary>
+    /// Gets or sets a value indicating whether the snake has disconnected from the server.
+    /// </summary>
     [JsonPropertyName("dc")]
-    public bool dc { get; set; }
+    public bool Disconnected { get; set; }
 
+    /// <summary>
+    /// Gets or sets a value indicating whether the snake has joined the server.
+    /// </summary>
     [JsonPropertyName("join")]
-    public bool join { get; set; }
+    public bool Joined { get; set; }
 }
-

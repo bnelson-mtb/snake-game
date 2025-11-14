@@ -6,9 +6,10 @@
 
 using System.Net;
 using System.Net.Sockets;
+using CS3500.Networking;
 using Microsoft.Extensions.Logging;
 
-namespace CS3500.Networking;
+namespace Networking;
 
 /// <summary>
 ///   Represents a server task that waits for connections on a given

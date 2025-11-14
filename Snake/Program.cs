@@ -1,3 +1,7 @@
+// <copyright file="Program.cs" company="UofU-CS3500">
+// Copyright (c) 2025 UofU-CS3500. All rights reserved.
+// </copyright>
+
 using Snake.Components;
 
 var builder = WebApplication.CreateBuilder(args);

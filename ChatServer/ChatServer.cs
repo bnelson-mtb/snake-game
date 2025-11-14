@@ -5,10 +5,10 @@
 // </copyright>
 
 using CS3500.Networking;
-using CS3500.Networking;
 using Microsoft.Extensions.Logging;
+using Networking;
 
-namespace CS3500.ChatServer;
+namespace ChatServer;
 
 /// <summary>
 ///   A simple ChatServer that handles clients separately and replies with a static message.

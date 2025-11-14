@@ -1,0 +1,8 @@
+﻿using Microsoft.AspNetCore.Components;
+
+namespace Snake.Components.Pages;
+
+public partial class Snake : ComponentBase
+{
+}
+
