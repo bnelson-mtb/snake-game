@@ -12,17 +12,17 @@ public class World
     /// <summary>
     /// Dict containing all the snakes in the world, with their unique IDs as keys.
     /// </summary>
-    private Dictionary<int, Snake> snakes;
+    public Dictionary<int, Snake> snakes;
 
     /// <summary>
     /// Dict containing all the walls in the world, with their unique IDs as keys.
     /// </summary>
-    private Dictionary<int, Wall> walls;
+    public Dictionary<int, Wall> walls;
 
     /// <summary>
     /// Dict containing all the powerUps in the world, with their unique IDs as keys.
     /// </summary>
-    private Dictionary<int, PowerUp> powerUps;
+    public Dictionary<int, PowerUp> powerUps;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="World"/> class.

@@ -35,6 +35,10 @@
 {
     <button class="btn btn-primary" @onclick="Connect">Connect</button>
 }
+@if (server.IsConnected)
+{
+    <button class="btn btn-primary" @onclick="GetServerInput">Get Server Input</button> 
+}
 
 <div id="myCanvas">
     <BECanvas Width="500" Height="500" @ref="canvasReference"/>
@@ -54,7 +58,7 @@
     private string errorMessage = string.Empty;
 
     // WORLD Model here:
-    private List<Rectangle> worldModel = new();
+    private World worldModel = new();
 
     // Controller Model here:
     private IJSObjectReference _jsModule = null!;
@@ -74,7 +78,7 @@
         Logger.LogDetailsBrief( LogLevel.Debug, "OnInitialized" );
     }
 
-    /// <summary>
+    /*/// <summary>
     ///   The first time we start up, we load our JavaScript and start the animation
     ///   process.
     /// </summary>
@@ -86,12 +90,17 @@
         {
             Logger.LogDetailsBrief( LogLevel.Debug, "First Render" );
 
-            _jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>( "import", "./Pages/NetworkedDrawing.razor.js" );
+            _jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>( "import", "./Pages/Snake.razor.js" );
             context = await canvasReference.CreateCanvas2DAsync();
 
             await _jsModule.InvokeVoidAsync( "initJS", DotNetObjectReference.Create( this ) );
             await _jsModule.InvokeVoidAsync( "ToggleAnimation", true );
         }
+    }*/
+
+    private void GetServerInput()
+    {
+        Logger.LogInformation(server.ReceiveLine());
     }
 
     /// <summary>
@@ -107,7 +116,7 @@
             networkStatus = "Connecting...";
             try
             {
-                server.Connect( "localhost", 15000 );
+                server.Connect( "localhost", 11000 );
                 networkStatus = "Connected";
                 ConnectTime = DateTime.Now;
             }
@@ -118,7 +127,10 @@
             }
         } );
 
-        StateHasChanged();
+        // Send the snake server a name to initialize snake and start receiving data
+        server.SendLine("Timothy");
+        
+        /*StateHasChanged();
 
         if (server.IsConnected)
         {
@@ -128,12 +140,11 @@
                 {
                     while (true)
                     {
-                        var worldFrameCount = server.ReceiveLine();
                         frameNumberNetwork = int.Parse(worldFrameCount);
                         var worldJSON = server.ReceiveLine();
                         lock (worldModel)
                         {
-                            // FIXME: write the code to turn the string into a list of rectangles and 
+                            // FIXME: write the code to turn the string into a list of rectangles and
                             // store in the worldModel variable.  if the De-serialization doesn't work, set the rectangles to a new empty list.
                             // Also: Comment out the log message.
 
@@ -151,7 +162,7 @@
 
                 Logger.LogError("Connection must have failed.");
             });
-        }
+        }*/
     }
 
     /// <summary>
@@ -183,25 +194,20 @@
             List<Rectangle> worldCopy = new();
             lock (worldModel)
             {
-                worldCopy = worldModel.ToList();
-            }
+                foreach (var wall in worldModel.walls.Values)
+                {
+                    // Draw walls
+                }
+                foreach (var snake in worldModel.snakes.Values)
+                {
+                    // Draw snakes
+                }
 
-            foreach (var rectangle in worldCopy)
-            {
-                await context.SetFillStyleAsync("lightblue");
-                await context.FillRectAsync( rectangle.X, rectangle.Y, rectangle.Width, rectangle.Height );
+                foreach (var powerup in worldModel.powerUps.Values)
+                {
+                    // Draw powerups
+                }
             }
-
-            // Draw Heads Up Display - do this last so it is on top
-            await context.SetFontAsync( "30px Arial" );
-            await context.SetFillStyleAsync( "white" );
-            await context.FillTextAsync( $"G-Frame: {frameNumberGUI}", 10, 30 );
-            await context.FillTextAsync( $"N-Frame: {frameNumberNetwork}", 10, 60 );
-            await context.FillTextAsync( $"FPS: {fps:F1}", 400, 30 );
-            await context.FillTextAsync( $"NPS: {nps:F1}", 400, 60 );
-            await context.FillTextAsync( $"Elapsed: {timeInSeconds:F0} seconds", 550, 30 );
-            await context.FillTextAsync( $"Network: {networkStatus}", 10, 90 );
-            await context.FillTextAsync( $"{errorMessage}", 10, 120 );
 
             await context.EndBatchAsync();
         }
