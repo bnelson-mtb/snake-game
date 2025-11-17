@@ -9,6 +9,7 @@ namespace Snake;
 /// <summary>
 /// Represents a wall, defined by two endpoints.
 /// </summary>
+[JsonSerializable(typeof(Wall))]
 public class Wall
 {
     /// <summary>

@@ -22,6 +22,7 @@
 @using Microsoft.Extensions.Logging.Abstractions
 @using System.Net.Sockets
 @using System.Text.Json
+@using Microsoft.Extensions.Logging.Configuration
 
 @inject IJSRuntime JsRuntime;
 @inject ILogger<Program> Logger;
@@ -31,17 +32,13 @@
 <h1>Lab 12 Example</h1>
 <p> Networking </p>
 
-@if (! server.IsConnected)
+@if (!server.IsConnected)
 {
     <button class="btn btn-primary" @onclick="Connect">Connect</button>
 }
-@if (server.IsConnected)
-{
-    <button class="btn btn-primary" @onclick="GetServerInput">Get Server Input</button> 
-}
+
 
 <div id="myCanvas">
-    <BECanvas Width="500" Height="500" @ref="canvasReference"/>
     <BECanvas Width="500" Height="500" @ref="canvasReference"/>
 </div>
 
@@ -82,30 +79,25 @@
         Logger.LogDetailsBrief( LogLevel.Debug, "OnInitialized" );
     }
 
-    /*/// <summary>
-    ///   The first time we start up, we load our JavaScript and start the animation
-    ///   process.
-    /// </summary>
-    /// <param name="firstRender"></param>
-    /// <returns></returns>
-    protected override async Task OnAfterRenderAsync( bool firstRender )
-    {
-        if ( firstRender )
-        {
-            Logger.LogDetailsBrief( LogLevel.Debug, "First Render" );
+     /// <summary>
+     ///   The first time we start up, we load our JavaScript and start the animation
+     ///   process.
+     /// </summary>
+     /// <param name="firstRender"></param>
+     /// <returns></returns>
+     protected override async Task OnAfterRenderAsync( bool firstRender )
+     {
+         if ( firstRender )
+         {
+             Logger.LogDetailsBrief( LogLevel.Debug, "First Render" );
 
-            _jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>( "import", "./Pages/Snake.razor.js" );
-            context = await canvasReference.CreateCanvas2DAsync();
+             _jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>( "import", "./Pages/SnakeGame.raz  or.js" );
+             context = await canvasReference.CreateCanvas2DAsync();
 
-            await _jsModule.InvokeVoidAsync( "initJS", DotNetObjectReference.Create( this ) );
-            await _jsModule.InvokeVoidAsync( "ToggleAnimation", true );
-        }
-    }*/
-
-    private void GetServerInput()
-    {
-        Logger.LogInformation(server.ReceiveLine());
-    }
+             await _jsModule.InvokeVoidAsync( "initJS", DotNetObjectReference.Create( this ) );
+             await _jsModule.InvokeVoidAsync( "ToggleAnimation", true );
+         }
+     }
     
     int count = 0;
 
@@ -152,7 +144,8 @@
                     {
                         if (wall != null) worldModel.walls[wall.Id] = wall;
                     }
-                    Logger.LogDetailsBrief(LogLevel.Debug, $"Received wall object {wall.Id}");
+                    Logger.LogDebug($"Received wall object {wall.Id}"); // TODO: Fix this to set to debug
+                    
                 }
                 else
                 {
@@ -178,7 +171,7 @@
             {
                 if (snake != null) worldModel.snakes[snake.Id] = snake;
             }
-            Logger.LogDetailsBrief(LogLevel.Debug, $"Received snake object {snake.Id}");
+            Logger.LogDebug($"Received snake object {snake.Id}"); // TODO: Fix this to set to debug
         }
         if (line.Contains("power"))
         {
@@ -186,7 +179,7 @@
             lock (worldModel)
             {
                 if (powerUp != null) worldModel.powerUps[powerUp.Id] = powerUp;
-                Logger.LogDetailsBrief(LogLevel.Debug, $"Received powerup object {powerUp.Id}");
+                 Logger.LogDebug($"Received powerup object {powerUp.Id}"); // TODO: Fix this to set to debug
             }
         }
     }

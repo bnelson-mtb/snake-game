@@ -9,6 +9,7 @@ namespace Snake;
 /// <summary>
 /// Represents a snake.
 /// </summary>
+[JsonSerializable(typeof(Snake))]
 public class Snake
 {
     /// <summary>

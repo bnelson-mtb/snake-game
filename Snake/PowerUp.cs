@@ -9,6 +9,7 @@ namespace Snake;
 /// <summary>
 /// Represents a power-up item.
 /// </summary>
+[JsonSerializable(typeof(PowerUp))]
 public class PowerUp
 {
     /// <summary>
