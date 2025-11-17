@@ -2,7 +2,7 @@
 
 namespace Snake.Components.Pages;
 
-public partial class Snake : ComponentBase
+public partial class SnakeGame : ComponentBase
 {
 }
 

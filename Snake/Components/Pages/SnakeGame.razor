@@ -62,6 +62,10 @@
 
     // Controller Model here:
     private IJSObjectReference _jsModule = null!;
+    
+    // Player data
+    int playerId;
+    int worldSize;
 
     // Network model
     private NetworkConnection server = new( NullLogger.Instance );
@@ -102,6 +106,8 @@
     {
         Logger.LogInformation(server.ReceiveLine());
     }
+    
+    int count = 0;
 
     /// <summary>
     ///   Attempt to connect to the server and begin the drawing process.
@@ -114,9 +120,11 @@
         {
             errorMessage = string.Empty;
             networkStatus = "Connecting...";
+            
             try
             {
-                server.Connect( "localhost", 11000 );
+                server.Connect("localhost", 11000);
+                
                 networkStatus = "Connected";
                 ConnectTime = DateTime.Now;
             }
@@ -125,44 +133,62 @@
                 errorMessage = e.Message;
                 networkStatus = "Error";
             }
-        } );
-
-        // Send the snake server a name to initialize snake and start receiving data
-        server.SendLine("Timothy");
-        
-        /*StateHasChanged();
-
-        if (server.IsConnected)
-        {
-            await Task.Run(() =>
+            
+            // Send player name to server
+            server.SendLine("Timothy"); // TODO: Make this name a player input
+            
+            // Receive player ID and world size
+            playerId = int.Parse(server.ReceiveLine());
+            worldSize = int.Parse(server.ReceiveLine());
+            
+            // Receive walls (until non-wall is received)
+            while (true)
             {
-                try
+                string nextLine = server.ReceiveLine();
+                if (nextLine.Contains("wall"))
                 {
-                    while (true)
+                    Wall? wall = JsonSerializer.Deserialize<Wall>(nextLine);
+                    lock (worldModel)
                     {
-                        frameNumberNetwork = int.Parse(worldFrameCount);
-                        var worldJSON = server.ReceiveLine();
-                        lock (worldModel)
-                        {
-                            // FIXME: write the code to turn the string into a list of rectangles and
-                            // store in the worldModel variable.  if the De-serialization doesn't work, set the rectangles to a new empty list.
-                            // Also: Comment out the log message.
-
-                            worldModel = JsonSerializer.Deserialize<List<Rectangle>>(worldJSON) ?? new();
-
-                            // Logger.LogDetailsBrief(LogLevel.Debug, $"Json received: {worldJSON}");
-                        }
+                        if (wall != null) worldModel.walls[wall.Id] = wall;
                     }
+                    Logger.LogDetailsBrief(LogLevel.Debug, $"Received wall object {wall.Id}");
                 }
-                catch (Exception e)
+                else
                 {
-                    errorMessage = e.Message;
-                    networkStatus = "Error";
+                    ProcessNonWallData(nextLine);
+                    break;
                 }
+            }
 
-                Logger.LogError("Connection must have failed.");
-            });
-        }*/
+            while (true)
+            {
+                string nextLine = server.ReceiveLine();
+                ProcessNonWallData(nextLine);
+            }
+        } );
+    }
+
+    private void ProcessNonWallData(string line)
+    {
+        if (line.Contains("snake"))
+        {
+            Snake? snake = JsonSerializer.Deserialize<Snake>(line);
+            lock (worldModel)
+            {
+                if (snake != null) worldModel.snakes[snake.Id] = snake;
+            }
+            Logger.LogDetailsBrief(LogLevel.Debug, $"Received snake object {snake.Id}");
+        }
+        if (line.Contains("power"))
+        {
+            PowerUp? powerUp = JsonSerializer.Deserialize<PowerUp>(line);
+            lock (worldModel)
+            {
+                if (powerUp != null) worldModel.powerUps[powerUp.Id] = powerUp;
+                Logger.LogDetailsBrief(LogLevel.Debug, $"Received powerup object {powerUp.Id}");
+            }
+        }
     }
 
     /// <summary>

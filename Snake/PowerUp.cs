@@ -15,7 +15,7 @@ public class PowerUp
     /// Gets or sets the unique identifier of the power-up.
     /// </summary>
     [JsonPropertyName("power")]
-    public int Power { get; set; }
+    public int Id { get; set; }
 
     /// <summary>
     /// Gets or sets the location of the power-up.
