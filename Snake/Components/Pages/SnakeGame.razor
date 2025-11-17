@@ -91,7 +91,7 @@
          {
              Logger.LogDetailsBrief( LogLevel.Debug, "First Render" );
 
-             _jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>( "import", "./Pages/SnakeGame.raz  or.js" );
+             _jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>( "import", "./Components/Pages/SnakeGame.razor.js" );
              context = await canvasReference.CreateCanvas2DAsync();
 
              await _jsModule.InvokeVoidAsync( "initJS", DotNetObjectReference.Create( this ) );
@@ -206,28 +206,35 @@
             await context.BeginBatchAsync();
 
             // Draw Background.
-            await context.SetFillStyleAsync( "darkblue" );
+            await context.SetFillStyleAsync( "lightgreen" );
             await context.FillRectAsync( 0, 0, GUIWidth, GUIHeight );
 
             // Draw "World Model" (i.e., rectangles)
-            List<Rectangle> worldCopy = new();
+            List<Wall> wallsCopy = new();
+            List<Snake> snakesCopy = new();
+            List<PowerUp> powerupsCopy = new();
+            
             lock (worldModel)
             {
-                foreach (var wall in worldModel.walls.Values)
-                {
-                    // Draw walls
-                }
-                foreach (var snake in worldModel.snakes.Values)
-                {
-                    // Draw snakes
-                }
-
-                foreach (var powerup in worldModel.powerUps.Values)
-                {
-                    // Draw powerups
-                }
+                wallsCopy = worldModel.walls.Values.ToList();
+                snakesCopy = worldModel.snakes.Values.ToList();
+                powerupsCopy = worldModel.powerUps.Values.ToList();
+            }
+            foreach (var wall in wallsCopy)
+            { 
+                await DrawWall(wall);
+            }
+            foreach (var snake in worldModel.snakes.Values)
+            {
+                // Draw snakes
             }
 
+            foreach (var powerup in worldModel.powerUps.Values)
+            {
+                // Draw powerups
+            }
+
+            await context.RestoreAsync();
             await context.EndBatchAsync();
         }
         catch ( Exception e )
@@ -236,6 +243,27 @@
         }
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    public void DrawSnake(Snake snake)
+    {
+    }
+
+    async Task DrawWall(Wall wall)
+    {
+        await context.SetFillStyleAsync("lightblue");
+        await context.FillRectAsync(wall.X, wall.Y, wall.Width, wall.Height);
+        Logger.LogDebug($"Drew a wall at X:{wall.X},Y:{wall.Y}");
+    }
+    
+    /// <summary>
+    /// 
+    /// </summary>
+    public void DrawPowerUp(PowerUp powerup)
+    {
+        
+    }
     /// <summary>
     ///   <para>
     ///     This method is called from the JavaScript side of the

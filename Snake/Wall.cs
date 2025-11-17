@@ -29,6 +29,26 @@ public class Wall
     /// </summary>
     [JsonPropertyName("p2")]
     public Point2D P2 { get; set; }
+
+    /// <summary>
+    /// Gets represents the width of the wall.
+    /// </summary>
+    public int Width => P2.X - P1.X == 0 ? 50 : Math.Max(P1.X - P2.X, P2.X - P1.X);
+
+    /// <summary>
+    /// Gets represents the height of the wall
+    /// </summary>
+    public int Height => P2.Y - P1.Y == 0 ? 50 : Math.Max(P2.Y - P1.Y, P1.Y - P2.Y);
+
+    /// <summary>
+    /// Gets the X value of the center of the wall.
+    /// </summary>
+    public int X => (P2.X - P1.X) / 2;
+
+    /// <summary>
+    /// Gets the Y value of the center of the wall.
+    /// </summary>
+    public int Y => (P2.Y - P1.Y) / 2;
 }
 
 // TODO: Check to see if at least one of the points is correct
