@@ -27,38 +27,39 @@
 @inject ILogger<Program> Logger;
 
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snake Game</title>
-</head>
+@if (!gameStarted) {
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Snake Game</title>
+    </head>
 
+    <div class="title-container">
+        <h1>SNAKE</h1>
+        <p class="subtitle"></p>
 
-<div class="title-container">
-    <h1>SNAKE</h1>
-    <p class="subtitle"></p>
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <p style="color:red;">@errorMessage</p>
+        }
+        @if (!playPressed)
+        {
 
-    @if (!string.IsNullOrEmpty(errorMessage))
-    {
-        <p style="color:red;">@errorMessage</p>
-    }
-    @if (!playPressed)
-    {
+            <input @bind="playerName"
+                   @bind:event="oninput"
+                   maxlength="16"
+                   placeholder="Enter your name"
+                   class="name-input-container" />
+            <br>
+            <button class="btn btn-primary" @onclick="Connect">Play</button>
+        }
+        <p style="color:#00ff00">@networkStatus</p>
+    </div>
 
-        <input @bind="playerName"
-               @bind:event="oninput"
-               maxlength="16"
-               placeholder="Enter your name"
-               class="name-input-container" />
-        <br>
-        <button class="btn btn-primary" @onclick="Connect">Play</button>
-    }
-    <p style="color:#00ff00">@networkStatus</p>
-</div>
-
-<body>
-<div class="scanline"></div>
-</body>
+    <body>
+    <div class="scanline"></div>
+    </body>
+}
 
 <div id="myCanvas" class="canvas-container">
     <BECanvas @ref="canvasReference"/>
@@ -92,8 +93,9 @@
     private int frameNumberNetwork = 0;
     private DateTime ConnectTime = DateTime.Now;
     
-    // Play is pressed
+    // Game state variables
     private bool playPressed = false;
+    private bool gameStarted = false;
     
     // Player name entered by the user
     private string playerName = string.Empty;
@@ -189,7 +191,9 @@
             return;
         }
 
+        // Make startup info disappear
         networkStatus = string.Empty;
+        gameStarted = true;
         InvokeAsync(StateHasChanged);
 
         // Send player name to server (use user's input instead of "Timothy")
