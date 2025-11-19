@@ -1,8 +1,234 @@
 ﻿@page "/"
 
-<PageTitle>Home</PageTitle>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Client Project - Home</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%);
+            font-family: 'Courier New', monospace;
+            position: relative;
+            margin: 0;
+            padding: 0;
+            color: #00ff00;
+            min-height: 100vh;
+        }
 
-<h1>Snake Client Project</h1>
-<p>by Brady Nelson & Charlie Adair</p>
+        /* Animated background grid */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 255, 0, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 0, 0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
+            pointer-events: none;
+            z-index: 0;
+        }
 
-Put project/assignment info here...
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            border: 2px solid #00ff00;
+            background: rgba(0, 0, 0, 0.3);
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+        }
+
+        h1 {
+            font-size: 3rem;
+            color: #00ff00;
+            text-shadow: 
+                0 0 10px #00ff00,
+                0 0 20px #00ff00,
+                0 0 30px #00ff00;
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.1em;
+        }
+
+        .authors {
+            font-size: 1.2rem;
+            color: #00ccff;
+            text-shadow: 0 0 5px #00ccff;
+            letter-spacing: 0.05em;
+        }
+
+        .section {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid #00ff00;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
+        }
+
+        h2 {
+            color: #00ff00;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 10px #00ff00;
+            border-bottom: 2px solid #00ff00;
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            color: #00ccff;
+            font-size: 1.3rem;
+            margin-top: 1.5rem;
+            margin-bottom: 0.8rem;
+            text-shadow: 0 0 5px #00ccff;
+        }
+
+        p {
+            line-height: 1.8;
+            margin-bottom: 1rem;
+            color: #88ff88;
+        }
+
+        ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        li {
+            padding: 0.5rem 0 0.5rem 1.5rem;
+            position: relative;
+            color: #88ff88;
+            line-height: 1.6;
+        }
+
+        li::before {
+            content: '▸';
+            position: absolute;
+            left: 0;
+            color: #00ff00;
+            text-shadow: 0 0 5px #00ff00;
+        }
+
+        .highlight {
+            background: rgba(0, 255, 0, 0.1);
+            padding: 1rem;
+            border-left: 3px solid #00ff00;
+            margin: 1rem 0;
+        }
+
+        .status-works {
+            color: #00ff00;
+            text-shadow: 0 0 5px #00ff00;
+        }
+
+        .status-issues {
+            color: #ffaa00;
+            text-shadow: 0 0 5px #ffaa00;
+        }
+
+        strong {
+            color: #00ff00;
+            text-shadow: 0 0 3px #00ff00;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>SNAKE CLIENT PROJECT</h1>
+            <p class="authors">by Brady Nelson & Charlie Adair</p>
+        </div>
+
+        <div class="section">
+            <h2>Project Overview</h2>
+            <p>
+                This project implements a networked multiplayer Snake game client using Blazor WebAssembly. 
+                The client communicates with a game server to enable real-time multiplayer gameplay with 
+                custom graphics.
+            </p>
+        </div>
+
+        <div class="section">
+            <h2>Design Decisions</h2>
+
+            <h3>User Interface</h3>
+            <ul>
+                <li><strong>Theme:</strong> Retro arcade aesthetic with neon green/cyan color scheme</li>
+                <li><strong>Controls:</strong> [Keyboard/touch controls description]</li>
+            </ul>
+
+            <h3>Game Logic</h3>
+            <ul>
+                <li><strong>Collision Detection:</strong> [Your implementation]</li>
+                <li><strong>Score Tracking:</strong> [How scores are calculated and displayed]</li>
+                <li><strong>Snake Growth:</strong> [How snake segments are managed]</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>Special Features</h2>
+            
+            <div class="highlight">
+                <p><strong>Feature 1: [Feature Name]</strong></p>
+                <p>Description...</p>
+            </div>
+
+            <div class="highlight">
+                <p><strong>Feature 2: [Feature Name]</strong></p>
+                <p>Description...</p>
+            </div>
+
+            <div class="highlight">
+                <p><strong>Feature 3: [Feature Name]</strong></p>
+                <p>Description...</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>What Works</h2>
+            <ul class="status-works">
+                <li>Server connection and handshake protocol</li>
+                <li>Real-time multiplayer synchronization</li>
+                <li>Snake movement and rendering</li>
+                <li>Food spawning and collection</li>
+                <li>Score tracking and display</li>
+                <li>Player death and respawn mechanics</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>Known Issues</h2>
+            <ul class="status-issues">
+                <li>[Any bugs or limitations]</li>
+                <li>[Performance considerations]</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>How to Test</h2>
+            <ol style="list-style: decimal; padding-left: 2rem;">
+                <li style="color: #88ff88; padding: 0.3rem 0;">Navigate to the game page</li>
+                <li style="color: #88ff88; padding: 0.3rem 0;">Enter your player name</li>
+                <li style="color: #88ff88; padding: 0.3rem 0;">Click "Play"</li>
+                <li style="color: #88ff88; padding: 0.3rem 0;">Use arrow keys to control your snake</li>
+                <li style="color: #88ff88; padding: 0.3rem 0;">[Any other testing instructions]</li>
+            </ol>
+        </div>
+
+        <div class="section">
+            <h2>Additional Notes</h2>
+            <p>
+                ...
+            </p>
+        </div>
+    </div>
+</body>

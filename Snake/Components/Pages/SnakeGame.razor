@@ -26,18 +26,30 @@
 @inject IJSRuntime JsRuntime;
 @inject ILogger<Program> Logger;
 
-<PageTitle> Snake Game</PageTitle>
 
-<h1>Snake Game</h1>
-
-@if (!server.IsConnected)
-{
-    <button class="btn btn-primary" @onclick="Connect">Connect</button>
-}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Game</title>
+</head>
 
 
-<div id="myCanvas">
-    <BECanvas Width="500" Height="500" @ref="canvasReference"/>
+<div class="title-container">
+    <h1>SNAKE</h1>
+    <p class="subtitle"></p>
+    @if (!playPressed)
+    {
+        <button class="btn btn-primary" @onclick="Connect">Play</button>
+    }
+    <p style="color:#00ff00">@networkStatus</p>
+</div>
+
+<body>
+<div class="scanline"></div>
+</body>
+
+<div id="myCanvas" class="canvas-container">
+    <BECanvas Width="720" Height="480" @ref="canvasReference"/>
 </div>
 
 @code 
@@ -64,9 +76,12 @@
 
     // Network model
     private NetworkConnection server = new( NullLogger.Instance );
-    private string networkStatus = "Waiting For You to Connect";
+    private string networkStatus = string.Empty;
     private int frameNumberNetwork = 0;
     private DateTime ConnectTime = DateTime.Now;
+    
+    // Play is pressed
+    private bool playPressed = false;
 
     /// <summary>
     ///   First step in the Blazor Page Life Cycle.  In some circumstances
@@ -104,12 +119,15 @@
     /// </summary>
     private async void Connect()
     {
+        playPressed = true;
+        
         Logger.LogInformation("Connecting!");
 
         await Task.Run( ( ) =>
         {
             errorMessage = string.Empty;
             networkStatus = "Connecting...";
+            InvokeAsync(StateHasChanged);
             
             try
             {
@@ -121,8 +139,13 @@
             catch ( Exception e )
             {
                 errorMessage = e.Message;
-                networkStatus = "Error";
+                networkStatus = "Couldn't connect! Please refresh the page and try again.";
+                playPressed = false;
+                InvokeAsync(StateHasChanged);
             }
+
+            networkStatus = string.Empty;
+            InvokeAsync(StateHasChanged);
             
             // Send player name to server
             server.SendLine("Timothy"); // TODO: Make this name a player input
