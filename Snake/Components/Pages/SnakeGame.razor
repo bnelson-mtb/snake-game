@@ -37,8 +37,20 @@
 <div class="title-container">
     <h1>SNAKE</h1>
     <p class="subtitle"></p>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <p style="color:red;">@errorMessage</p>
+    }
     @if (!playPressed)
     {
+
+        <input @bind="playerName"
+               @bind:event="oninput"
+               maxlength="16"
+               placeholder="Enter your name"
+               class="name-input-container" />
+        <br>
         <button class="btn btn-primary" @onclick="Connect">Play</button>
     }
     <p style="color:#00ff00">@networkStatus</p>
@@ -49,7 +61,7 @@
 </body>
 
 <div id="myCanvas" class="canvas-container">
-    <BECanvas Width="720" Height="480" @ref="canvasReference"/>
+    <BECanvas @ref="canvasReference"/>
 </div>
 
 @code 
@@ -59,7 +71,7 @@
     private Canvas2DContext     context = null!;
 
     // GUI Model here:
-    private int GUIWidth = 800, GUIHeight = 800;
+    private int GUIWidth = 720, GUIHeight = 480;
     private DateTime StartTime = DateTime.Now;
     private int frameNumberGUI = 0;
     private string errorMessage = string.Empty;
@@ -82,6 +94,13 @@
     
     // Play is pressed
     private bool playPressed = false;
+    
+    // Player name entered by the user
+    private string playerName = string.Empty;
+
+    // Names that are not allowed (edit this list however you want)
+    private static readonly string[] DisallowedNames = new[]
+    {"wall", "snake", "power"};
 
     /// <summary>
     ///   First step in the Blazor Page Life Cycle.  In some circumstances
@@ -114,74 +133,104 @@
     
     int count = 0;
 
-    /// <summary>
-    ///   Attempt to connect to the server and begin the drawing process.
-    /// </summary>
     private async void Connect()
+{
+    // Basic validation before we even try to connect
+    if (string.IsNullOrWhiteSpace(playerName))
     {
-        playPressed = true;
-        
-        Logger.LogInformation("Connecting!");
-
-        await Task.Run( ( ) =>
-        {
-            errorMessage = string.Empty;
-            networkStatus = "Connecting...";
-            InvokeAsync(StateHasChanged);
-            
-            try
-            {
-                server.Connect("localhost", 11000);
-                
-                networkStatus = "Connected";
-                ConnectTime = DateTime.Now;
-            }
-            catch ( Exception e )
-            {
-                errorMessage = e.Message;
-                networkStatus = "Couldn't connect! Please refresh the page and try again.";
-                playPressed = false;
-                InvokeAsync(StateHasChanged);
-            }
-
-            networkStatus = string.Empty;
-            InvokeAsync(StateHasChanged);
-            
-            // Send player name to server
-            server.SendLine("Timothy"); // TODO: Make this name a player input
-            
-            // Receive player ID and world size
-            playerId = int.Parse(server.ReceiveLine());
-            worldSize = int.Parse(server.ReceiveLine());
-            
-            // Receive walls (until non-wall is received)
-            while (true)
-            {
-                string nextLine = server.ReceiveLine();
-                if (nextLine.Contains("wall"))
-                {
-                    Wall? wall = JsonSerializer.Deserialize<Wall>(nextLine);
-                    lock (worldModel)
-                    {
-                        if (wall != null) worldModel.walls[wall.Id] = wall;
-                    }
-                    Logger.LogDebug($"Received wall object {wall.Id}"); // TODO: Fix this to set to debug
-                    
-                }
-                else
-                {
-                    ProcessNonWallData(nextLine);
-                    break;
-                }
-            }
-
-            while (true)
-            {
-                string nextLine = server.ReceiveLine();
-                ProcessNonWallData(nextLine);
-            }
-        } );
+        errorMessage = "Please enter a name before playing.";
+        networkStatus = string.Empty;
+        playPressed = false;
+        await InvokeAsync(StateHasChanged);
+        return;
     }
+
+    // Trim + enforce max length on the C# side too
+    var chosenName = playerName.Trim();
+    if (chosenName.Length > 16)
+    {
+        chosenName = chosenName[..16];
+    }
+
+    // Check against disallowed names (case-insensitive)
+    foreach (var banned in DisallowedNames)
+    {
+        if (string.Equals(banned, chosenName, StringComparison.OrdinalIgnoreCase))
+        {
+            errorMessage = "That name is not allowed. Please pick a different one.";
+            networkStatus = string.Empty;
+            playPressed = false;
+            await InvokeAsync(StateHasChanged);
+            return;
+        }
+    }
+
+    playPressed = true;
+    Logger.LogInformation("Connecting!");
+
+    await Task.Run(() =>
+    {
+        errorMessage = string.Empty;
+        networkStatus = "Connecting...";
+        InvokeAsync(StateHasChanged);
+
+        try
+        {
+            server.Connect("localhost", 11000);
+            networkStatus = "Connected";
+            ConnectTime = DateTime.Now;
+        }
+        catch (Exception e)
+        {
+            errorMessage = e.Message;
+            networkStatus = "Couldn't connect! Please refresh the page and try again.";
+            playPressed = false;
+            InvokeAsync(StateHasChanged);
+            return;
+        }
+
+        networkStatus = string.Empty;
+        InvokeAsync(StateHasChanged);
+
+        // Send player name to server (use user's input instead of "Timothy")
+        server.SendLine(chosenName);
+
+        // Receive player ID and world size
+        playerId = int.Parse(server.ReceiveLine());
+        worldSize = int.Parse(server.ReceiveLine());
+
+        // Receive walls (until non-wall is received)
+        while (true)
+        {
+            string nextLine = server.ReceiveLine();
+            if (nextLine.Contains("wall"))
+            {
+                Wall? wall = JsonSerializer.Deserialize<Wall>(nextLine);
+                lock (worldModel)
+                {
+                    if (wall != null)
+                    {
+                        worldModel.walls[wall.Id] = wall;
+                    }
+                }
+                Logger.LogTrace($"Received wall object {wall?.Id}");
+            }
+            else
+            {
+                ProcessNonWallData(nextLine);
+                break;
+            }
+        }
+
+        // Main receive loop
+        while (true)
+        {
+            string nextLine = server.ReceiveLine();
+            ProcessNonWallData(nextLine);
+        }
+    });
+}
+
 
     private void ProcessNonWallData(string line)
     {
@@ -192,7 +241,7 @@
             {
                 if (snake != null) worldModel.snakes[snake.Id] = snake;
             }
-            Logger.LogDebug($"Received snake object {snake.Id}"); // TODO: Fix this to set to debug
+            Logger.LogTrace($"Received snake object {snake.Id}");
         }
         if (line.Contains("power"))
         {
@@ -200,7 +249,7 @@
             lock (worldModel)
             {
                 if (powerUp != null) worldModel.powerUps[powerUp.Id] = powerUp;
-                 Logger.LogDebug($"Received powerup object {powerUp.Id}"); // TODO: Fix this to set to debug
+                 Logger.LogTrace($"Received powerup object {powerUp.Id}");
             }
         }
     }
@@ -270,14 +319,14 @@
             await context.FillRectAsync(rectangle.X, rectangle.Y, rectangle.Width, rectangle.Height);
         }
 
-        Logger.LogDebug($"Drew snake with ID: {snake.Id}");
+        Logger.LogTrace($"Drew snake with ID: {snake.Id}");
     }
 
     async Task DrawWall(Wall wall)
     {
         await context.SetFillStyleAsync("lightblue");
         await context.FillRectAsync(wall.X, wall.Y, wall.Width, wall.Height);
-        Logger.LogDebug($"Drew a wall at X:{wall.X},Y:{wall.Y}");
+        Logger.LogTrace($"Drew a wall at X:{wall.X},Y:{wall.Y}");
     }
     
     /// <summary>
@@ -304,6 +353,26 @@
         Logger.LogTrace( "Resizing the web page. {width} {height}", width, height );
         GUIWidth = Math.Min(Math.Max(100, width),1000);
         GUIHeight = Math.Min(Math.Max(100, height),1000);
+    }
+    
+    [JSInvokable]
+    public void HandleKeyPress(string key)
+    {
+        string? direction = key switch
+        {
+            "w" or "ArrowUp" => "up",
+            "s" or "ArrowDown" => "down",
+            "a" or "ArrowLeft" => "left",
+            "d" or "ArrowRight" => "right",
+            _ => null
+        };
+    
+        if (direction != null)
+        {
+            var cmd = new { moving = direction };
+            string json = JsonSerializer.Serialize(cmd);
+            server.SendLine(json);
+        }
     }
 
     /// <summary>

@@ -206,5 +206,24 @@ h1 {
     position: relative;
 }
 
+.name-input-container {
+    width: 275px;              /* controls size */
+    padding: 10px;             /* space inside the box */
+    font-size: 30px;           /* text size */
+    font-family: 'Segoe UI', sans-serif;  /* text font */
+    color: #ffffff;            /* text color */
+    background-color: #3a0647; /* input background color */
+    border: 2px solid #00ff88; /* border color */
+    border-radius: 6px;        /* rounded corners */
+    outline: none;             /* remove default focus outline */
+    position: relative;
+    margin-bottom: 20px;
+}
+
+/* Optional: glowing green border when focused */
+.name-input-container:focus {
+    border-color: #33ff99;
+    box-shadow: 0 0 6px #33ff99;
+}
 
 

@@ -2,6 +2,7 @@
 var framecount = 0;
 var animationFrameId = 0;
 var animating = false;
+let dotNetHelper = null;
 
 export function ToggleAnimation( on )
 {
@@ -55,12 +56,14 @@ function resizeCanvasToFitWindow()
         var sideCar = document.getElementsByClassName('sidebar');
         var main = document.getElementsByTagName('main');
 
-        //var width = window.innerWidth - sideCar[0].getBoundingClientRect().width;
         let width = document.getElementsByTagName('main')[0].offsetWidth;
         width = Math.min(width - 100, 1000);
+        let height = document.getElementsByTagName('main')[0].offsetHeight;
+        height = Math.min(height - 100, 1000);
         canvas.width = width;
+        canvas.height = height;
 
-        DotNetSide.invokeMethodAsync('ResizeInBlazor', width, width );
+        DotNetSide.invokeMethodAsync('ResizeInBlazor', width, height );
     }
 }
 
@@ -84,7 +87,7 @@ document.addEventListener('keydown', function (event)
     console.log('Key pressed:', event.key);
 
     // Call the C# method and pass the key pressed
-    // DotNetSide.invokeMethodAsync('HandleKeyPress', event.key);
+    DotNetSide.invokeMethodAsync('HandleKeyPress', event.key);
 });
 
 /**
