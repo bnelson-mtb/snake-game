@@ -34,4 +34,13 @@ public class World
         this.walls = new Dictionary<int, Wall>();
         this.powerUps = new Dictionary<int, PowerUp>();
     }
+
+    public World Clone()
+    {
+        World output = new();
+        output.walls = new Dictionary<int, Wall>(this.walls);
+        output.snakes = new Dictionary<int, Snake>(this.snakes);
+        output.powerUps = new Dictionary<int, PowerUp>(this.powerUps);
+        return output;
+    }
 }
