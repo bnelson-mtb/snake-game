@@ -204,32 +204,27 @@
         {
             // Group all the draw commands into one large single draw.
             await context.BeginBatchAsync();
-
             // Draw Background.
-            await context.SetFillStyleAsync( "lightgreen" );
+            await context.SetFillStyleAsync( "black" );
             await context.FillRectAsync( 0, 0, GUIWidth, GUIHeight );
 
             // Draw "World Model" (i.e., rectangles)
-            List<Wall> wallsCopy = new();
-            List<Snake> snakesCopy = new();
-            List<PowerUp> powerupsCopy = new();
+            World worldCopy;
             
             lock (worldModel)
             {
-                wallsCopy = worldModel.walls.Values.ToList();
-                snakesCopy = worldModel.snakes.Values.ToList();
-                powerupsCopy = worldModel.powerUps.Values.ToList();
+                worldCopy = worldModel.Clone();
             }
-            foreach (var wall in wallsCopy)
+            foreach (var wall in worldCopy.walls.Values)
             { 
                 await DrawWall(wall);
             }
-            foreach (var snake in worldModel.snakes.Values)
+            foreach (var snake in worldCopy.snakes.Values)
             {
-                // Draw snakes
+                await DrawSnake(snake);
             }
 
-            foreach (var powerup in worldModel.powerUps.Values)
+            foreach (var powerup in worldCopy.powerUps.Values)
             {
                 // Draw powerups
             }
@@ -246,8 +241,15 @@
     /// <summary>
     /// 
     /// </summary>
-    public void DrawSnake(Snake snake)
+    async Task DrawSnake(Snake snake)
     {
+        foreach (Rectangle rectangle in snake.Rectangles)
+        {
+            await context.SetFillStyleAsync("lightblue");
+            await context.FillRectAsync(rectangle.X, rectangle.Y, rectangle.Width, rectangle.Height);
+        }
+
+        Logger.LogDebug($"Drew snake with ID: {snake.Id}");
     }
 
     async Task DrawWall(Wall wall)

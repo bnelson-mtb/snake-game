@@ -2,6 +2,7 @@
 // Copyright (c) 2025 UofU-CS3500. All rights reserved.
 // </copyright>
 
+using System.Drawing;
 using System.Text.Json.Serialization;
 
 namespace Snake;
@@ -59,4 +60,47 @@ public class Snake
     /// </summary>
     [JsonPropertyName("join")]
     public bool Joined { get; set; }
+
+    public IList<Rectangle> Rectangles
+    {
+        get
+        {
+            IList<Rectangle> rectangles = new List<Rectangle>();
+            Point2D? lastPoint = null;
+            foreach (Point2D point in Body)
+            {
+                if (lastPoint == null)
+                {
+                    lastPoint = point;
+                }
+                else
+                {
+                    // X caculation
+                    int x = (lastPoint.X + point.X) / 2;
+
+                    // Y calculation
+                    int y = (lastPoint.Y + point.Y) / 2;
+
+                    // width calculation
+                    int calculateWidth = Math.Max(lastPoint.X - point.X, point.X - lastPoint.X);
+                    int width = calculateWidth == 0 ? 10 : calculateWidth;
+
+                    // height calculation
+                    int calculateHeight = Math.Max(lastPoint.Y - point.Y, point.Y - lastPoint.Y);
+                    int height = calculateHeight == 0 ? 10 : calculateHeight;
+                    rectangles.Add(new Rectangle(x, y, width, height));
+                }
+            }
+
+            return rectangles;
+        }
+    }
+
+    public Point2D Head
+    {
+        get
+        {
+            return Body[ 0 ];
+        }
+    }
 }
