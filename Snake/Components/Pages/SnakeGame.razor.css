@@ -29,6 +29,7 @@ html, body {
     width: 100%;
     margin: 0;
     padding: 0;
+    overflow: hidden;
 }
 
 * {
@@ -76,7 +77,7 @@ body::before {
 .canvas-container {
     text-align: center;
     z-index: 1;
-    padding: 2rem;
+    padding: 0;
     position: relative;
 }
 

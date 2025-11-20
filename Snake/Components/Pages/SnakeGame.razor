@@ -269,19 +269,19 @@
     public async void Draw( double timeStamp = 0 )
     {
         frameNumberGUI++;
-
         double fps = frameNumberGUI / (double)(DateTime.Now - StartTime).TotalSeconds;
-        double nps = frameNumberNetwork / (double)(DateTime.Now - ConnectTime).TotalSeconds;
-        int timeInSeconds = (int)(timeStamp / 1000);
 
         try
         {
             // Group all the draw commands into one large single draw.
             await context.BeginBatchAsync();
             
-            // Draw outside the world
-            await context.SetFillStyleAsync( "grey" );
+            // Clear canvas and start with drawing the outside world
+            await context.SaveAsync();
+            await context.SetTransformAsync(1, 0, 0, 1, 0, 0); // Reset transform to identity
+            await context.SetFillStyleAsync( "#3a0647" ); // Game background color, also found in nav bar
             await context.FillRectAsync( 0, 0, GUIWidth, GUIHeight );
+            await context.RestoreAsync();
             
             World worldCopy;
             Point2D? head = null;
@@ -289,6 +289,7 @@
             {
                 worldCopy = worldModel.Clone();
             }
+            
             if (worldCopy.snakes.TryGetValue(playerId, out var playerSnake) && playerSnake.Body.Any())
             {
                 head = playerSnake.Head;
@@ -304,9 +305,9 @@
 
             if (head != null)
             {
-                // Center on player's head
-                await context.TranslateAsync(GUIWidth / 2.0, GUIHeight / 2.0);
-                await context.TranslateAsync(-head.X, -head.Y);
+            // Center on player's head
+            await context.TranslateAsync(GUIWidth / 2.0, GUIHeight / 2.0);
+            await context.TranslateAsync(-head.X, -head.Y);
             }
             else
             {
@@ -314,23 +315,39 @@
                 await context.TranslateAsync(GUIWidth / 2.0, GUIHeight / 2.0);
             }
             
-            await context.SetFillStyleAsync( "black" );
+            // Draw background
+            await context.SetFillStyleAsync( "#0c0c1a" );
             await context.FillRectAsync(-worldSize / 2, -worldSize / 2, worldSize, worldSize);
             
-            foreach (var wall in worldCopy.walls.Values)
+            // Draw all game objects (thread-safe)
+            lock (worldModel)
             {
-                await DrawWall(wall);
-            }
-            foreach (var snake in worldCopy.snakes.Values)
-            {
-                await DrawSnake(snake);
-            }
-            foreach (var powerup in worldCopy.powerUps.Values)
-            {
-                // Draw powerups
+                foreach (var wall in worldCopy.walls.Values)
+                {
+                    DrawWall(wall);
+                }
+                
+                foreach (var powerup in worldCopy.powerUps.Values)
+                {
+                    DrawPowerUp(powerup);
+                }
+
+                foreach (var snake in worldCopy.snakes.Values)
+                {
+                    DrawSnake(snake);
+                }
             }
 
             await context.RestoreAsync();
+            
+            // Draw game monitor border
+            await context.SetShadowBlurAsync(20);
+            await context.SetShadowColorAsync("#00ff00");
+            await context.SetStrokeStyleAsync("#00ff00");
+            await context.SetLineWidthAsync(4);
+            await context.StrokeRectAsync(0, 0, GUIWidth, GUIHeight);
+            await context.SetShadowBlurAsync(0); // reset after
+            
             await context.EndBatchAsync();
         }
         catch ( Exception e )
@@ -340,36 +357,71 @@
     }
 
     /// <summary>
-    /// 
+    /// Draws a snake on the canvas
     /// </summary>
+    /// <param name="snake"></param>
     async Task DrawSnake(Snake snake)
     {
-        foreach (Rectangle rectangle in snake.Rectangles)
+        if (!snake.Alive)
+            return;
+
+        // Glow ON
+        await context.SetShadowBlurAsync(20);
+        await context.SetShadowColorAsync("#00ff00");
+        await context.SetStrokeStyleAsync("#00ff00");
+        await context.SetLineWidthAsync(10);
+
+        await context.BeginPathAsync();
+
+        Point2D firstPoint = snake.Body[0];
+        await context.MoveToAsync(firstPoint.X, firstPoint.Y);
+
+        foreach (Point2D segment in snake.Body)
         {
-            await context.SetFillStyleAsync("lightblue");
-            await context.FillRectAsync(rectangle.X, rectangle.Y, rectangle.Width, rectangle.Height);
+            await context.LineToAsync(segment.X, segment.Y);
         }
+
+        await context.StrokeAsync();
+
+        // Glow OFF (reset)
+        await context.SetShadowBlurAsync(0);
+        await context.SetShadowColorAsync("transparent");
 
         Logger.LogTrace($"Drew snake with ID: {snake.Id}");
     }
 
+    /// <summary>
+    /// Draws a wall on the canvas
+    /// </summary>
+    /// <param name="wall"></param>
     async Task DrawWall(Wall wall)
     {
-        await context.SetFillStyleAsync("lightblue");
-        foreach (var rect in wall.Rectangles)
-        {
-            await context.FillRectAsync(rect.X, rect.Y, rect.Width, rect.Height);
-        }
-        Logger.LogTrace($"Drew wall {wall.Id}");
+        // Walls are just thick lines from p1 to p2
+        await context.SetStrokeStyleAsync("#3a0647");  // Purple (same color as bg)
+        await context.SetLineWidthAsync(50);           // 50 pixels thick
+        await context.SetLineCapAsync(LineCap.Square); // Square ends
+    
+        await context.BeginPathAsync();
+        await context.MoveToAsync(wall.P1.X, wall.P1.Y);
+        await context.LineToAsync(wall.P2.X, wall.P2.Y);
+        await context.StrokeAsync();
     }
     
     /// <summary>
-    /// 
+    /// Draws a power-up on the canvas
     /// </summary>
-    public void DrawPowerUp(PowerUp powerup)
+    /// <param name="powerup"></param>
+    async Task DrawPowerUp(PowerUp powerup)
     {
-        
+        // Don't draw dead powerups
+        if (powerup.Died)
+            return;
+    
+        // Draw powerups
+        await context.SetFillStyleAsync("gold");
+        await context.FillRectAsync(powerup.Location.X, powerup.Location.Y, 16, 16);
     }
+    
     /// <summary>
     ///   <para>
     ///     This method is called from the JavaScript side of the
@@ -389,6 +441,10 @@
         GUIHeight = Math.Min(Math.Max(100, height),1000);
     }
     
+    /// <summary>
+    /// Takes key presses from JS, sends them as packets to the server.
+    /// </summary>
+    /// <param name="key"></param>
     [JSInvokable]
     public void HandleKeyPress(string key)
     {
