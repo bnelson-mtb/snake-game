@@ -278,26 +278,53 @@
         {
             // Group all the draw commands into one large single draw.
             await context.BeginBatchAsync();
-            // Draw Background.
-            await context.SetFillStyleAsync( "black" );
-            await context.FillRectAsync( 0, 0, GUIWidth, GUIHeight );
-
-            // Draw "World Model" (i.e., rectangles)
-            World worldCopy;
             
+            // Draw outside the world
+            await context.SetFillStyleAsync( "grey" );
+            await context.FillRectAsync( 0, 0, GUIWidth, GUIHeight );
+            
+            World worldCopy;
+            Point2D? head = null;
             lock (worldModel)
             {
                 worldCopy = worldModel.Clone();
             }
+            if (worldCopy.snakes.TryGetValue(playerId, out var playerSnake) && playerSnake.Body.Any())
+            {
+                head = playerSnake.Head;
+            }
+
+            // Because we are modifying the transformation matrix, we need to save it so we can restore it at the end
+            await context.SaveAsync();
+
+            // clip the view so that objects drawn outside the canvas will not be shown
+            await context.BeginPathAsync();
+            await context.RectAsync( 0, 0, GUIWidth, GUIHeight );
+            await context.ClipAsync();
+
+            if (head != null)
+            {
+                // Center on player's head
+                await context.TranslateAsync(GUIWidth / 2.0, GUIHeight / 2.0);
+                await context.TranslateAsync(-head.X, -head.Y);
+            }
+            else
+            {
+                // If we don't have a snake, just center the view on the origin
+                await context.TranslateAsync(GUIWidth / 2.0, GUIHeight / 2.0);
+            }
+            
+            await context.SetFillStyleAsync( "black" );
+            await context.FillRectAsync(-worldSize / 2, -worldSize / 2, worldSize, worldSize);
+            
             foreach (var wall in worldCopy.walls.Values)
-            { 
+            {
                 await DrawWall(wall);
             }
             foreach (var snake in worldCopy.snakes.Values)
             {
                 await DrawSnake(snake);
             }
-
             foreach (var powerup in worldCopy.powerUps.Values)
             {
                 // Draw powerups
@@ -329,8 +356,11 @@
     async Task DrawWall(Wall wall)
     {
         await context.SetFillStyleAsync("lightblue");
-        await context.FillRectAsync(wall.X, wall.Y, wall.Width, wall.Height);
-        Logger.LogTrace($"Drew a wall at X:{wall.X},Y:{wall.Y}");
+        foreach (var rect in wall.Rectangles)
+        {
+            await context.FillRectAsync(rect.X, rect.Y, rect.Width, rect.Height);
+        }
+        Logger.LogTrace($"Drew wall {wall.Id}");
     }
     
     /// <summary>

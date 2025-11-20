@@ -98,7 +98,7 @@ public class Snake
     {
         get
         {
-            return Body[ 0 ];
+            return Body.Last();
         }
     }
 }
