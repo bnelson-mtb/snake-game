@@ -65,30 +65,28 @@ public class Snake
     {
         get
         {
-            IList<Rectangle> rectangles = new List<Rectangle>();
-            Point2D? lastPoint = null;
-            foreach (Point2D point in Body)
+            const int thickness = 10;
+            var rectangles = new List<Rectangle>();
+
+            for (int i = 0; i < Body.Count - 1; i++)
             {
-                if (lastPoint == null)
+                var p1 = Body[i];
+                var p2 = Body[i + 1];
+
+                // Vertical segment
+                if (p1.X == p2.X)
                 {
-                    lastPoint = point;
+                    int y = Math.Min(p1.Y, p2.Y);
+                    int height = Math.Abs(p1.Y - p2.Y);
+                    rectangles.Add(new Rectangle(p1.X - (thickness / 2), y, thickness, height));
                 }
-                else
+
+                // Horizontal segment
+                else if (p1.Y == p2.Y)
                 {
-                    // X caculation
-                    int x = (lastPoint.X + point.X) / 2;
-
-                    // Y calculation
-                    int y = (lastPoint.Y + point.Y) / 2;
-
-                    // width calculation
-                    int calculateWidth = Math.Max(lastPoint.X - point.X, point.X - lastPoint.X);
-                    int width = calculateWidth == 0 ? 10 : calculateWidth;
-
-                    // height calculation
-                    int calculateHeight = Math.Max(lastPoint.Y - point.Y, point.Y - lastPoint.Y);
-                    int height = calculateHeight == 0 ? 10 : calculateHeight;
-                    rectangles.Add(new Rectangle(x, y, width, height));
+                    int x = Math.Min(p1.X, p2.X);
+                    int width = Math.Abs(p1.X - p2.X);
+                    rectangles.Add(new Rectangle(x, p1.Y - (thickness / 2), width, thickness));
                 }
             }
 
