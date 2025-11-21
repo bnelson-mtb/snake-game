@@ -340,6 +340,9 @@
 
             await context.RestoreAsync();
             
+            // Draw Heads-Up Display (no transformation - screen coordinates)
+            await DrawHUD(fps);
+            
             // Draw game monitor border
             await context.SetShadowBlurAsync(20);
             await context.SetShadowColorAsync("#00ff00");
@@ -365,25 +368,68 @@
         if (!snake.Alive)
             return;
 
-        // Glow ON
-        await context.SetShadowBlurAsync(20);
-        await context.SetShadowColorAsync("#00ff00");
-        await context.SetStrokeStyleAsync("#00ff00");
-        await context.SetLineWidthAsync(10);
-
-        await context.BeginPathAsync();
-
         Point2D firstPoint = snake.Body[0];
-        await context.MoveToAsync(firstPoint.X, firstPoint.Y);
 
-        foreach (Point2D segment in snake.Body)
+        if (snake.Id != playerId)
         {
-            await context.LineToAsync(segment.X, segment.Y);
+            if (!snake.Alive)
+                return;
+
+            // Glow ON
+            await context.SetShadowBlurAsync(20);
+            await context.SetShadowColorAsync("red");
+            await context.SetStrokeStyleAsync("red");
+            await context.SetLineWidthAsync(10);
+
+            await context.BeginPathAsync();
+
+            firstPoint = snake.Body[0];
+            await context.MoveToAsync(firstPoint.X, firstPoint.Y);
+
+            foreach (Point2D segment in snake.Body)
+            {
+                await context.LineToAsync(segment.X, segment.Y);
+            }
+
+            await context.StrokeAsync();
         }
 
-        await context.StrokeAsync();
+        else
+        {
+            // Glow ON
+            await context.SetShadowBlurAsync(20);
+            await context.SetShadowColorAsync("#00ff00");
+            await context.SetStrokeStyleAsync("#00ff00");
+            await context.SetLineWidthAsync(10);
 
-        // Glow OFF (reset)
+            await context.BeginPathAsync();
+
+            firstPoint = snake.Body[0];
+            await context.MoveToAsync(firstPoint.X, firstPoint.Y);
+
+            foreach (Point2D segment in snake.Body)
+            {
+                await context.LineToAsync(segment.X, segment.Y);
+            }
+
+            await context.StrokeAsync();
+        }
+
+        // Draw the snake's name above its head
+        Point2D head = snake.Body[snake.Body.Count - 1];
+        await context.SetFontAsync("14px Courier");
+        await context.SetFillStyleAsync("white");
+        await context.FillTextAsync(snake.Name, head.X - 20, head.Y - 15);
+
+        // Draw the score near the name (for player)
+        if (snake.Id == playerId)
+        {
+
+        await context.SetFontAsync("12px Courier");
+        await context.FillTextAsync($"Score: {snake.Score}", head.X - 20, head.Y - 30); 
+        }
+
+    // Glow OFF (reset)
         await context.SetShadowBlurAsync(0);
         await context.SetShadowColorAsync("transparent");
 
@@ -420,6 +466,43 @@
         // Draw powerups
         await context.SetFillStyleAsync("gold");
         await context.FillRectAsync(powerup.Location.X, powerup.Location.Y, 16, 16);
+    }
+    
+    /// <summary>
+    /// Draws the heads-up display showing scores and info
+    /// </summary>
+    private async Task DrawHUD(double fps)
+    {
+        await context.SetFontAsync("20px Courier");
+        await context.SetFillStyleAsync("white");
+    
+        // Show FPS
+        if (gameStarted)
+        {
+            await context.FillTextAsync($"Players: {worldModel.snakes.Count} - FPS: {fps:F1}", 10, 25);
+        }
+
+        // Show player list and scores
+        int yOffset = 50;
+        await context.SetFontAsync("16px Courier");
+
+        int scoreOrdering = 1;
+        int count = 0;
+        lock (worldModel)
+        {
+            foreach (var snake in worldModel.snakes.Values.OrderByDescending(s => s.Score))
+            {
+                if (count < 8)
+                {
+                    context.SetFillStyleAsync("white");
+                    context.FillTextAsync($"{scoreOrdering++}.", 10, yOffset);
+                    context.FillTextAsync($"{snake.Name}: {snake.Score}", 35, yOffset);
+                }
+                
+                count++;
+                yOffset += 20;
+            }
+        }
     }
     
     /// <summary>

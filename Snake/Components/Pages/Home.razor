@@ -162,15 +162,16 @@
 
             <h3>User Interface</h3>
             <ul>
-                <li><strong>Theme:</strong> Retro arcade aesthetic with neon green/cyan color scheme</li>
-                <li><strong>Controls:</strong> [Keyboard/touch controls description]</li>
+                <li><strong>Theme:</strong> Retro arcade aesthetic with neon green/purple color scheme.</li>
+                <li><strong>Controls:</strong> Use WASD or the arrow keys to move the snake.</li>
+                <li><strong>HUD:</strong> Your score is shown above your snake; the scores of the top 8 players, as well as FPS, are shown in the top left of the screen.</li>
             </ul>
 
-            <h3>Game Logic</h3>
+            <h3>Client Logic</h3>
             <ul>
-                <li><strong>Collision Detection:</strong> [Your implementation]</li>
-                <li><strong>Score Tracking:</strong> [How scores are calculated and displayed]</li>
-                <li><strong>Snake Growth:</strong> [How snake segments are managed]</li>
+                <li><strong>JSON Deserialization:</strong> The client receives data packets from the server as JSON files, deserializes them into game objects.</li>
+                <li><strong>Canvas Drawing:</strong> The BECanvas element in Blazor handles the drawing of the objects according to the assignment specs.</li>
+                <li><strong>Networking:</strong> The client uses a wrapper class of TcpClient to communicate with the server.</li>
             </ul>
         </div>
 
@@ -194,34 +195,11 @@
         </div>
 
         <div class="section">
-            <h2>What Works</h2>
-            <ul class="status-works">
-                <li>Server connection and handshake protocol</li>
-                <li>Real-time multiplayer synchronization</li>
-                <li>Snake movement and rendering</li>
-                <li>Food spawning and collection</li>
-                <li>Score tracking and display</li>
-                <li>Player death and respawn mechanics</li>
-            </ul>
-        </div>
-
-        <div class="section">
             <h2>Known Issues</h2>
             <ul class="status-issues">
                 <li>[Any bugs or limitations]</li>
                 <li>[Performance considerations]</li>
             </ul>
-        </div>
-
-        <div class="section">
-            <h2>How to Test</h2>
-            <ol style="list-style: decimal; padding-left: 2rem;">
-                <li style="color: #88ff88; padding: 0.3rem 0;">Navigate to the game page</li>
-                <li style="color: #88ff88; padding: 0.3rem 0;">Enter your player name</li>
-                <li style="color: #88ff88; padding: 0.3rem 0;">Click "Play"</li>
-                <li style="color: #88ff88; padding: 0.3rem 0;">Use arrow keys to control your snake</li>
-                <li style="color: #88ff88; padding: 0.3rem 0;">[Any other testing instructions]</li>
-            </ol>
         </div>
 
         <div class="section">
