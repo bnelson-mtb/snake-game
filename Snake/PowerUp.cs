@@ -29,4 +29,14 @@ public class PowerUp
     /// </summary>
     [JsonPropertyName("died")]
     public bool Died { get; set; }
+
+    /// <summary>
+    /// Gives a point opposite of the "Location" in order to normalize it for <see cref="Blazor.Extensions.Canvas"/>
+    /// drawings in order to draw a shape where the "location" is the center of the shape drawn.
+    /// </summary>
+    /// <returns> A point -8, +8 points away from <see cref="Location"/>. </returns>
+    public Point2D GetDrawingPoint()
+    {
+        return new Point2D(this.Location.X-8, this.Location.Y-8);
+    }
 }
