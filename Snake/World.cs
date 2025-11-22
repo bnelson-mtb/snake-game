@@ -12,17 +12,17 @@ public class World
     /// <summary>
     /// Dict containing all the snakes in the world, with their unique IDs as keys.
     /// </summary>
-    public Dictionary<int, Snake> snakes;
+    public Dictionary<int, Snake> Snakes;
 
     /// <summary>
     /// Dict containing all the walls in the world, with their unique IDs as keys.
     /// </summary>
-    public Dictionary<int, Wall> walls;
+    public Dictionary<int, Wall> Walls;
 
     /// <summary>
     /// Dict containing all the powerUps in the world, with their unique IDs as keys.
     /// </summary>
-    public Dictionary<int, PowerUp> powerUps;
+    public Dictionary<int, PowerUp> PowerUps;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="World"/> class.
@@ -30,17 +30,21 @@ public class World
     /// </summary>
     public World()
     {
-        this.snakes = new Dictionary<int, Snake>();
-        this.walls = new Dictionary<int, Wall>();
-        this.powerUps = new Dictionary<int, PowerUp>();
+        this.Snakes = new Dictionary<int, Snake>();
+        this.Walls = new Dictionary<int, Wall>();
+        this.PowerUps = new Dictionary<int, PowerUp>();
     }
 
+    /// <summary>
+    /// Clone method used to create a copy of this world.
+    /// </summary>
+    /// <returns> An exact copy of this world. </returns>
     public World Clone()
     {
         World output = new();
-        output.walls = new Dictionary<int, Wall>(this.walls);
-        output.snakes = new Dictionary<int, Snake>(this.snakes);
-        output.powerUps = new Dictionary<int, PowerUp>(this.powerUps);
+        output.Walls = new Dictionary<int, Wall>(this.Walls);
+        output.Snakes = new Dictionary<int, Snake>(this.Snakes);
+        output.PowerUps = new Dictionary<int, PowerUp>(this.PowerUps);
         return output;
     }
 }

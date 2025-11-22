@@ -1,21 +1,27 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿// <copyright file="SnakeGame.razor.cs" company="UofU-CS3500">
+// Copyright (c) 2025 UofU-CS3500. All rights reserved.
+// </copyright>
+
+using System.Diagnostics;
+using System.Drawing;
+using System.Net.Sockets;
+using System.Text.Json;
 using Blazor.Extensions;
 using Blazor.Extensions.Canvas;
 using Blazor.Extensions.Canvas.Canvas2D;
-using System.Drawing;
-using System.Diagnostics;
 using CS3500.LogSupport;
 using CS3500.Networking;
+using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Logging.Abstractions;
-using System.Net.Sockets;
-using System.Text.Json;
 using Microsoft.Extensions.Logging.Configuration;
 using Microsoft.JSInterop;
 
 namespace Snake.Components.Pages;
 
 
-
+/// <summary>
+///  The C# component of the <see cref="SnakeGame"/> client.
+/// </summary>
 public partial class SnakeGame : ComponentBase
 {
         // Drawing/Canvas variables here.
@@ -164,7 +170,7 @@ public partial class SnakeGame : ComponentBase
                 {
                     if (wall != null)
                     {
-                        worldModel.walls[wall.Id] = wall;
+                        worldModel.Walls[wall.Id] = wall;
                     }
                 }
 
@@ -186,7 +192,6 @@ public partial class SnakeGame : ComponentBase
     });
 }
 
-
     /// <summary>
     /// Adds data (that is not a wall) to the world model.
     /// </summary>
@@ -200,12 +205,16 @@ public partial class SnakeGame : ComponentBase
             {
                 if (snake != null)
                 {
-                    worldModel.snakes[snake.Id] = snake;
+                    worldModel.Snakes[snake.Id] = snake;
                 }
             }
 
-            Logger.LogTrace($"Received snake object {snake.Id}");
+            if (snake != null)
+            {
+                Logger.LogTrace($"Received snake object {snake.Id}");
+            }
         }
+
         if (line.Contains("power"))
         {
             PowerUp? powerUp = JsonSerializer.Deserialize<PowerUp>(line);
@@ -213,10 +222,13 @@ public partial class SnakeGame : ComponentBase
             {
                 if (powerUp != null)
                 {
-                    worldModel.powerUps[powerUp.Id] = powerUp;
+                    worldModel.PowerUps[powerUp.Id] = powerUp;
                 }
 
-                Logger.LogTrace($"Received powerup object {powerUp.Id}");
+                if (powerUp != null)
+                {
+                    Logger.LogTrace($"Received powerup object {powerUp.Id}");
+                }
             }
         }
     }
@@ -232,7 +244,7 @@ public partial class SnakeGame : ComponentBase
     public async void Draw( double timeStamp = 0 )
     {
         frameNumberGUI++;
-        double fps = frameNumberGUI / (double)(DateTime.Now - StartTime).TotalSeconds;
+        double fps = frameNumberGUI / (DateTime.Now - StartTime).TotalSeconds;
 
         if (server.IsConnected)
         {
@@ -255,7 +267,7 @@ public partial class SnakeGame : ComponentBase
                     worldCopy = worldModel.Clone();
                 }
 
-                if (worldCopy.snakes.TryGetValue(playerId, out var playerSnake) && playerSnake.Body.Any())
+                if (worldCopy.Snakes.TryGetValue(playerId, out var playerSnake) && playerSnake.Body.Any())
                 {
                     head = playerSnake.Head;
                 }
@@ -282,22 +294,24 @@ public partial class SnakeGame : ComponentBase
 
                 // Draw background
                 await context.SetFillStyleAsync( "#0c0c1a" );
+
+                // ReSharper disable PossibleLossOfFraction
                 await context.FillRectAsync(-worldSize / 2, -worldSize / 2, worldSize, worldSize);
 
                 // Draw all game objects (thread-safe)
                 lock (worldModel)
                 {
-                    foreach (var wall in worldCopy.walls.Values)
+                    foreach (var wall in worldCopy.Walls.Values)
                     {
                         DrawWall(wall);
                     }
 
-                    foreach (var powerup in worldCopy.powerUps.Values)
+                    foreach (var powerup in worldCopy.PowerUps.Values)
                     {
                         DrawPowerUp(powerup);
                     }
 
-                    foreach (var snake in worldCopy.snakes.Values)
+                    foreach (var snake in worldCopy.Snakes.Values)
                     {
                         DrawSnake(snake);
                     }
@@ -363,7 +377,6 @@ public partial class SnakeGame : ComponentBase
 
             await context.StrokeAsync();
         }
-
         else
         {
             // Glow ON
@@ -453,7 +466,7 @@ public partial class SnakeGame : ComponentBase
         {
             lock (worldModel)
             {
-                context.FillTextAsync($"Players: {worldModel.snakes.Count} - FPS: {fps:F1}", 10, 25);
+                context.FillTextAsync($"Players: {worldModel.Snakes.Count} - FPS: {fps:F1}", 10, 25);
             }
         }
 
@@ -462,19 +475,19 @@ public partial class SnakeGame : ComponentBase
         await context.SetFontAsync("16px Courier");
 
         int scoreOrdering = 1;
-        int count = 0;
+        int i = 0;
         lock (worldModel)
         {
-            foreach (var snake in worldModel.snakes.Values.OrderByDescending(s => s.Score))
+            foreach (var snake in worldModel.Snakes.Values.OrderByDescending(s => s.Score))
             {
-                if (count < 8)
+                if (i < 8)
                 {
                     context.SetFillStyleAsync("white");
                     context.FillTextAsync($"{scoreOrdering++}.", 10, yOffset);
                     context.FillTextAsync($"{snake.Name}: {snake.Score}", 35, yOffset);
                 }
 
-                count++;
+                i++;
                 yOffset += 20;
             }
         }
@@ -502,7 +515,7 @@ public partial class SnakeGame : ComponentBase
     /// <summary>
     /// Takes key presses from JS, sends them as packets to the server.
     /// </summary>
-    /// <param name="key"></param>
+    /// <param name="key"> The key that was pressed. Follows JS standards. </param>
     [JSInvokable]
     public void HandleKeyPress(string key)
     {
@@ -535,4 +548,3 @@ public partial class SnakeGame : ComponentBase
         Logger.LogDetailsBrief( LogLevel.Debug, "Dispose" );
     }
 }
-

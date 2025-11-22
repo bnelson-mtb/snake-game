@@ -94,6 +94,9 @@ public class Snake
         }
     }
 
+    /// <summary>
+    /// Gets the "Head" of the snake.
+    /// </summary>
     public Point2D Head
     {
         get

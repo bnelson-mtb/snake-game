@@ -11,16 +11,17 @@ use in Academic Coursework.
 
 # Comments to Evaluators:
 This project contains the main functionality of the Snake Client. It uses the rest of the solution (the networking
-library) to communicate with the server.
+library) to communicate with the server (provided for us in the assignment's starter code).
+
+This library primarily handles the storing and drawing of the objects received by the server.
 
 # Assignment Specific Topics
-n/a
+- Networking.
+- Model, View, Controller separation.
 
 # Consulted Peers:
 n/a
 
-# References:
-n/a
-
 # Use of AI
-n/a
+- The built-in auto-complete of the Rider IDE was used on occasion.
+- Copilot was used to better understand how to actually use the BECanvas API.
