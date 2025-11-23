@@ -24,7 +24,8 @@ public partial class SnakeGame : ComponentBase
     private Canvas2DContext     context = null!;
 
     // GUI Model here:
-    private int GUIWidth = 720, GUIHeight = 480;
+    private int GUIWidth;
+    private int GUIHeight;
     private DateTime StartTime = DateTime.Now;
     private int frameNumberGUI = 0;
     private string errorMessage = string.Empty;
