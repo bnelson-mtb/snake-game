@@ -4,6 +4,10 @@ var animationFrameId = 0;
 var animating = false;
 let dotNetHelper = null;
 
+/**
+ * This is called from the C# side to start or stop the animation.
+ * @param {boolean} on - true to start, false to stop.
+ */
 export function ToggleAnimation( on )
 {
     console.log("N: Toggle Animation " + on);

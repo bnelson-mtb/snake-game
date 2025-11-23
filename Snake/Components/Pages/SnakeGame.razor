@@ -11,18 +11,6 @@
 @rendermode InteractiveServer
 @implements IDisposable
 
-@using Blazor.Extensions
-@using Blazor.Extensions.Canvas
-@using Blazor.Extensions.Canvas.Canvas2D
-@using System.Drawing
-@using System.Diagnostics
-@using CS3500.LogSupport
-@using CS3500.Networking
-@using Microsoft.Extensions.Logging.Abstractions
-@using System.Net.Sockets
-@using System.Text.Json
-@using Microsoft.Extensions.Logging.Configuration
-
 @inject IJSRuntime JsRuntime;
 @inject ILogger<Program> Logger;
 
@@ -64,7 +52,3 @@
 <div id="myCanvas" class="canvas-container">
     <BECanvas @ref="canvasReference"/>
 </div>
-
-@code 
-{
-}

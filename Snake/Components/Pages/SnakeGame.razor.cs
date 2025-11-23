@@ -2,18 +2,13 @@
 // Copyright (c) 2025 UofU-CS3500. All rights reserved.
 // </copyright>
 
-using System.Diagnostics;
-using System.Drawing;
-using System.Net.Sockets;
 using System.Text.Json;
 using Blazor.Extensions;
-using Blazor.Extensions.Canvas;
 using Blazor.Extensions.Canvas.Canvas2D;
 using CS3500.LogSupport;
 using CS3500.Networking;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Logging.Configuration;
 using Microsoft.JSInterop;
 
 namespace Snake.Components.Pages;
@@ -88,8 +83,6 @@ public partial class SnakeGame : ComponentBase
              await _jsModule.InvokeVoidAsync( "ToggleAnimation", true );
          }
      }
-
-    int count = 0;
 
     private async void Connect()
 {
