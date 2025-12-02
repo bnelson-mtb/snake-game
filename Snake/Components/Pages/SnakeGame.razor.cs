@@ -153,8 +153,6 @@ public partial class SnakeGame : ComponentBase
         playerId = int.Parse(server.ReceiveLine());
         worldSize = int.Parse(server.ReceiveLine());
 
-        // TODO: Client first connects = start of a game. Add a new row to games table
-
         // Receive walls (until non-wall is received)
         while (true)
         {
@@ -202,9 +200,6 @@ public partial class SnakeGame : ComponentBase
                 if (snake != null)
                 {
                     worldModel.Snakes[snake.Id] = snake;
-                    // TODO: Check if snake has been seen before, if not, add new row in to players table
-                    // TODO: If snake has been seen before, check if score is max, if so, update max score in players table
-                    // TODO: If "dc" property is true, update leave time in players table
                 }
             }
 
@@ -534,20 +529,6 @@ public partial class SnakeGame : ComponentBase
             server.SendLine(json);
         }
     }
-
-    /// <summary>
-    /// Disconnects client from the server and resets game state/join page.
-    /// TODO: Implement method
-    /// </summary>
-    /// <returns></returns>
-    void Disconnect()
-    {
-        server.Disconnect();
-        gameStarted = false;
-        playPressed = false;
-        // TODO: When player disconnects, update the ending time in the games table entry
-    }
-
 
     /// <summary>
     ///   Called by the system when the page is navigated away from.
