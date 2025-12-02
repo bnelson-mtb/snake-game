@@ -178,11 +178,17 @@ public partial class SnakeGame : ComponentBase
         }
 
         // Main receive loop
-        while (true)
+        while (server.IsConnected)
         {
             string nextLine = server.ReceiveLine();
             ProcessNonWallData(nextLine);
         }
+
+        // Clean up after loop exits
+        errorMessage = "Disconnected!";
+        gameStarted = false;
+        playPressed = false;
+        InvokeAsync(StateHasChanged);
     });
 }
 
@@ -228,7 +234,7 @@ public partial class SnakeGame : ComponentBase
     }
 
     /// <summary>
-    ///   Draw the world
+    ///   Draw the world.
     /// </summary>
     /// <param name="timeStamp">
     ///   Tells you how many milliseconds have
@@ -334,7 +340,7 @@ public partial class SnakeGame : ComponentBase
     }
 
     /// <summary>
-    /// Draws a snake on the canvas
+    /// Draws a snake on the canvas.
     /// </summary>
     /// <param name="snake"> The <see cref="Snake"/> object to draw. </param>
     async Task DrawSnake(Snake snake)
@@ -513,6 +519,11 @@ public partial class SnakeGame : ComponentBase
     [JSInvokable]
     public void HandleKeyPress(string key)
     {
+        if (key == "Escape")
+        {
+            HandleDisconnect();
+        }
+
         string? direction = key switch
         {
             "w" or "ArrowUp" => "up",
@@ -528,6 +539,33 @@ public partial class SnakeGame : ComponentBase
             string json = JsonSerializer.Serialize(cmd);
             server.SendLine(json);
         }
+    }
+
+    /// <summary>
+    /// Handles disconnecting. Safely clears the world model and resets the game state variables.
+    /// </summary>
+    private void HandleDisconnect()
+    {
+        if (server.IsConnected)
+        {
+            server.Disconnect();
+        }
+
+        // reset game state
+        gameStarted = false;
+        playPressed = false;
+
+        // clear the world
+        lock (worldModel)
+        {
+            worldModel = new World();
+        }
+
+        // create a new connection object for next time
+        server = new NetworkConnection(this.Logger);
+
+        // Update the UI
+        InvokeAsync(StateHasChanged);
     }
 
     /// <summary>
