@@ -160,8 +160,9 @@ public partial class SnakeGame : ComponentBase
         playerId = int.Parse(server.ReceiveLine());
         worldSize = int.Parse(server.ReceiveLine());
 
+        
         // TODO
-        /*// Database: Start a new game session
+        // Database: Start a new game session
         // This is when the client first connects, so we create a game entry
         try
         {
@@ -172,7 +173,7 @@ public partial class SnakeGame : ComponentBase
         {
             Logger.LogWarning($"Failed to record game start in database: {ex.Message}");
             // Don't crash the game if DB fails - just log and continue
-        }*/
+        }
 
         // Receive walls (until non-wall is received)
         while (server.IsConnected)
@@ -193,7 +194,7 @@ public partial class SnakeGame : ComponentBase
             }
             else
             {
-                ProcessNonWallData(nextLine);
+                GameLoopIteration(nextLine);
                 break;
             }
         }
@@ -204,7 +205,7 @@ public partial class SnakeGame : ComponentBase
             try
             {
                 string nextLine = server.ReceiveLine();
-                ProcessNonWallData(nextLine);
+                GameLoopIteration(nextLine);
             }
             catch (Exception e)
             {
@@ -222,10 +223,10 @@ public partial class SnakeGame : ComponentBase
 }
 
     /// <summary>
-    /// Adds data (that is not a wall) to the world model.
+    /// Adds data (that is not a wall) to the world model and updates the database with player data.
     /// </summary>
-    /// <param name="line"> A JSON object received from the server. </param>
-    private void ProcessNonWallData(string line)
+    /// <param name="line"> A JSON object received from the server. Can be a snake or power-up.</param>
+    private void GameLoopIteration(string line)
     {
         if (line.Contains("snake"))
         {
@@ -237,7 +238,7 @@ public partial class SnakeGame : ComponentBase
                     worldModel.Snakes[snake.Id] = snake;
 
                     // TODO
-                    /*// Database: Record or update player
+                    // Database: Record or update player
                     // Check if snake has been seen before, if not, add new row in to players table
                     // If snake has been seen before, check if score is max, if so, update max score in players table
                     // If "dc" property is true, update leave time in players table
@@ -246,6 +247,7 @@ public partial class SnakeGame : ComponentBase
                         // Check if snake disconnected
                         if (snake.Disconnected)
                         {
+                            worldModel.Snakes.Remove(snake.Id);
                             dbController.RecordPlayerDisconnect(snake.Id);
                             Logger.LogTrace($"Recorded disconnect for snake {snake.Id}");
                         }
@@ -259,7 +261,7 @@ public partial class SnakeGame : ComponentBase
                     {
                         Logger.LogWarning($"Failed to update player in database: {ex.Message}");
                         // Don't crash - just log and continue
-                    }*/
+                    }
                 }
             }
 
