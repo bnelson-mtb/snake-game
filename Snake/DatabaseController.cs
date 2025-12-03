@@ -44,7 +44,7 @@ public class DatabaseController
     /// <returns>The ID of the newly created game.</returns>
     public int StartNewGame()
     {
-        //
+        throw new NotImplementedException();
     }
 
     /// <summary>

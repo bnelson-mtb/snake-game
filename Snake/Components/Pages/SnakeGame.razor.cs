@@ -61,7 +61,7 @@ public partial class SnakeGame : ComponentBase
     private static readonly string ConnectionString = 
         "Server=;Database=;User Id=;Password=;TrustServerCertificate=True;";
 
-    private readonly DatabaseController _dbController = new(ConnectionString);
+    private readonly DatabaseController dbController = new(ConnectionString);
 
     /// <summary>
     ///   First step in the Blazor Page Life Cycle.  In some circumstances
@@ -93,7 +93,7 @@ public partial class SnakeGame : ComponentBase
      }
 
     private async void Connect()
-{
+    {
     // Basic validation before we even try to connect
     if (string.IsNullOrWhiteSpace(playerName))
     {
@@ -148,47 +148,48 @@ public partial class SnakeGame : ComponentBase
             return;
         }
 
-            // Make startup info disappear
-            networkStatus = string.Empty;
-            gameStarted = true;
-            InvokeAsync(StateHasChanged);
+        // Make startup info disappear
+        networkStatus = string.Empty;
+        gameStarted = true;
+        InvokeAsync(StateHasChanged);
 
-            // Send player name to server (use user's input instead of "Timothy")
-            server.SendLine(chosenName);
+        // Send player name to server (use user's input instead of "Timothy")
+        server.SendLine(chosenName);
 
-            // Receive player ID and world size
-            playerId = int.Parse(server.ReceiveLine());
-            worldSize = int.Parse(server.ReceiveLine());
-            
-            // Database: Start a new game session
-            // This is when the client first connects, so we create a game entry
-            try
-            {
-                int gameId = _dbController.StartNewGame();
-                Logger.LogInformation($"Started new game session with ID: {gameId}");
-            }
-            catch (Exception ex)
-            {
-                Logger.LogWarning($"Failed to record game start in database: {ex.Message}");
-                // Don't crash the game if DB fails - just log and continue
-            }
+        // Receive player ID and world size
+        playerId = int.Parse(server.ReceiveLine());
+        worldSize = int.Parse(server.ReceiveLine());
 
-            // Receive walls (until non-wall is received)
-            while (true)
+        // TODO
+        /*// Database: Start a new game session
+        // This is when the client first connects, so we create a game entry
+        try
+        {
+            int gameId = dbController.StartNewGame();
+            Logger.LogInformation($"Started new game session with ID: {gameId}");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning($"Failed to record game start in database: {ex.Message}");
+            // Don't crash the game if DB fails - just log and continue
+        }*/
+
+        // Receive walls (until non-wall is received)
+        while (server.IsConnected)
+        {
+            string nextLine = server.ReceiveLine();
+            if (nextLine.Contains("wall"))
             {
-                string nextLine = server.ReceiveLine();
-                if (nextLine.Contains("wall"))
+                Wall? wall = JsonSerializer.Deserialize<Wall>(nextLine);
+                lock (worldModel)
                 {
-                    Wall? wall = JsonSerializer.Deserialize<Wall>(nextLine);
-                    lock (worldModel)
+                    if (wall != null)
                     {
-                        if (wall != null)
-                        {
-                            worldModel.Walls[wall.Id] = wall;
-                        }
+                        worldModel.Walls[wall.Id] = wall;
                     }
+                }
 
-            Logger.LogTrace($"Received wall object {wall?.Id}");
+                Logger.LogTrace($"Received wall object {wall?.Id}");
             }
             else
             {
@@ -227,7 +228,8 @@ public partial class SnakeGame : ComponentBase
                 {
                     worldModel.Snakes[snake.Id] = snake;
 
-                    // Database: Record or update player
+                    // TODO
+                    /*// Database: Record or update player
                     // Check if snake has been seen before, if not, add new row in to players table
                     // If snake has been seen before, check if score is max, if so, update max score in players table
                     // If "dc" property is true, update leave time in players table
@@ -236,20 +238,20 @@ public partial class SnakeGame : ComponentBase
                         // Check if snake disconnected
                         if (snake.Disconnected)
                         {
-                            _dbController.RecordPlayerDisconnect(snake.Id);
+                            dbController.RecordPlayerDisconnect(snake.Id);
                             Logger.LogTrace($"Recorded disconnect for snake {snake.Id}");
                         }
                         else
                         {
                             // Record or update the player (handles both new and existing)
-                            _dbController.RecordOrUpdatePlayer(snake.Id, snake.Name, snake.Score);
+                            dbController.RecordOrUpdatePlayer(snake.Id, snake.Name, snake.Score);
                         }
                     }
                     catch (Exception ex)
                     {
                         Logger.LogWarning($"Failed to update player in database: {ex.Message}");
                         // Don't crash - just log and continue
-                    }
+                    }*/
                 }
             }
 
@@ -610,6 +612,8 @@ public partial class SnakeGame : ComponentBase
 
         // Update the UI
         InvokeAsync(StateHasChanged);
+
+        // TODO: When player disconnects, update the ending time in the games table entry
     }
 
     /// <summary>
