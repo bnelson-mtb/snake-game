@@ -19,7 +19,7 @@ namespace Snake.Components.Pages;
 /// </summary>
 public partial class SnakeGame : ComponentBase
 {
-        // Drawing/Canvas variables here.
+    // Drawing/Canvas variables here.
     private BECanvasComponent   canvasReference = null!;
     private Canvas2DContext     context = null!;
 
@@ -56,6 +56,13 @@ public partial class SnakeGame : ComponentBase
     // Names that are not allowed (edit this list however you want)
     private static readonly string[] disallowedNames = new[] { "wall", "snake", "power" };
 
+    // Database controller
+    // TODO: Replace with connection string from secrets file
+    private static readonly string ConnectionString = 
+        "Server=;Database=;User Id=;Password=;TrustServerCertificate=True;";
+
+    private readonly DatabaseController _dbController = new(ConnectionString);
+
     /// <summary>
     ///   First step in the Blazor Page Life Cycle.  In some circumstances
     ///   you would load data here.  We do not need to.
@@ -86,107 +93,118 @@ public partial class SnakeGame : ComponentBase
      }
 
     private async void Connect()
-{
-    // Basic validation before we even try to connect
-    if (string.IsNullOrWhiteSpace(playerName))
     {
-        errorMessage = "Please enter a name before playing.";
-        networkStatus = string.Empty;
-        playPressed = false;
-        await InvokeAsync(StateHasChanged);
-        return;
-    }
-
-    // Trim + enforce max length on the C# side too
-    var chosenName = playerName.Trim();
-    if (chosenName.Length > 16)
-    {
-        chosenName = chosenName[..16];
-    }
-
-    // Check against disallowed names (case-insensitive)
-    foreach (var banned in disallowedNames)
-    {
-        if (string.Equals(banned, chosenName, StringComparison.OrdinalIgnoreCase))
+        // Basic validation before we even try to connect
+        if (string.IsNullOrWhiteSpace(playerName))
         {
-            errorMessage = "That name is not allowed. Please pick a different one.";
+            errorMessage = "Please enter a name before playing.";
             networkStatus = string.Empty;
             playPressed = false;
             await InvokeAsync(StateHasChanged);
             return;
         }
-    }
 
-    playPressed = true;
-    Logger.LogInformation("Connecting!");
-
-    await Task.Run(() =>
-    {
-        errorMessage = string.Empty;
-        networkStatus = "Connecting...";
-        InvokeAsync(StateHasChanged);
-
-        try
+        // Trim + enforce max length on the C# side too
+        var chosenName = playerName.Trim();
+        if (chosenName.Length > 16)
         {
-            server.Connect("localhost", 11000);
-            networkStatus = "Connected";
-            connectTime = DateTime.Now;
+            chosenName = chosenName[..16];
         }
-        catch (Exception e)
+
+        // Check against disallowed names (case-insensitive)
+        foreach (var banned in disallowedNames)
         {
-            errorMessage = e.Message;
-            networkStatus = "Couldn't connect! Please refresh the page and try again.";
-            playPressed = false;
+            if (string.Equals(banned, chosenName, StringComparison.OrdinalIgnoreCase))
+            {
+                errorMessage = "That name is not allowed. Please pick a different one.";
+                networkStatus = string.Empty;
+                playPressed = false;
+                await InvokeAsync(StateHasChanged);
+                return;
+            }
+        }
+
+        playPressed = true;
+        Logger.LogInformation("Connecting!");
+
+        await Task.Run(() =>
+        {
+            errorMessage = string.Empty;
+            networkStatus = "Connecting...";
             InvokeAsync(StateHasChanged);
-            return;
-        }
 
-        // Make startup info disappear
-        networkStatus = string.Empty;
-        gameStarted = true;
-        InvokeAsync(StateHasChanged);
-
-        // Send player name to server (use user's input instead of "Timothy")
-        server.SendLine(chosenName);
-
-        // Receive player ID and world size
-        playerId = int.Parse(server.ReceiveLine());
-        worldSize = int.Parse(server.ReceiveLine());
-
-        // TODO: Client first connects = start of a game. Add a new row to games table
-
-        // Receive walls (until non-wall is received)
-        while (true)
-        {
-            string nextLine = server.ReceiveLine();
-            if (nextLine.Contains("wall"))
+            try
             {
-                Wall? wall = JsonSerializer.Deserialize<Wall>(nextLine);
-                lock (worldModel)
+                server.Connect("localhost", 11000);
+                networkStatus = "Connected";
+                connectTime = DateTime.Now;
+            }
+            catch (Exception e)
+            {
+                errorMessage = e.Message;
+                networkStatus = "Couldn't connect! Please refresh the page and try again.";
+                playPressed = false;
+                InvokeAsync(StateHasChanged);
+                return;
+            }
+
+            // Make startup info disappear
+            networkStatus = string.Empty;
+            gameStarted = true;
+            InvokeAsync(StateHasChanged);
+
+            // Send player name to server (use user's input instead of "Timothy")
+            server.SendLine(chosenName);
+
+            // Receive player ID and world size
+            playerId = int.Parse(server.ReceiveLine());
+            worldSize = int.Parse(server.ReceiveLine());
+            
+            // Database: Start a new game session
+            // This is when the client first connects, so we create a game entry
+            try
+            {
+                int gameId = _dbController.StartNewGame();
+                Logger.LogInformation($"Started new game session with ID: {gameId}");
+            }
+            catch (Exception ex)
+            {
+                Logger.LogWarning($"Failed to record game start in database: {ex.Message}");
+                // Don't crash the game if DB fails - just log and continue
+            }
+
+            // Receive walls (until non-wall is received)
+            while (true)
+            {
+                string nextLine = server.ReceiveLine();
+                if (nextLine.Contains("wall"))
                 {
-                    if (wall != null)
+                    Wall? wall = JsonSerializer.Deserialize<Wall>(nextLine);
+                    lock (worldModel)
                     {
-                        worldModel.Walls[wall.Id] = wall;
+                        if (wall != null)
+                        {
+                            worldModel.Walls[wall.Id] = wall;
+                        }
                     }
+
+                    Logger.LogTrace($"Received wall object {wall?.Id}");
                 }
-
-                Logger.LogTrace($"Received wall object {wall?.Id}");
+                else
+                {
+                    ProcessNonWallData(nextLine);
+                    break;
+                }
             }
-            else
+
+            // Main receive loop
+            while (true)
             {
+                string nextLine = server.ReceiveLine();
                 ProcessNonWallData(nextLine);
-                break;
             }
-        }
-
-        // Main receive loop
-        while (true)
-        {
-            string nextLine = server.ReceiveLine();
-            ProcessNonWallData(nextLine);
-        }
-    });
-}
+        });
+    }
 
     /// <summary>
     /// Adds data (that is not a wall) to the world model.
@@ -202,9 +220,30 @@ public partial class SnakeGame : ComponentBase
                 if (snake != null)
                 {
                     worldModel.Snakes[snake.Id] = snake;
-                    // TODO: Check if snake has been seen before, if not, add new row in to players table
-                    // TODO: If snake has been seen before, check if score is max, if so, update max score in players table
-                    // TODO: If "dc" property is true, update leave time in players table
+
+                    // Database: Record or update player
+                    // Check if snake has been seen before, if not, add new row in to players table
+                    // If snake has been seen before, check if score is max, if so, update max score in players table
+                    // If "dc" property is true, update leave time in players table
+                    try
+                    {
+                        // Check if snake disconnected
+                        if (snake.Disconnected)
+                        {
+                            _dbController.RecordPlayerDisconnect(snake.Id);
+                            Logger.LogTrace($"Recorded disconnect for snake {snake.Id}");
+                        }
+                        else
+                        {
+                            // Record or update the player (handles both new and existing)
+                            _dbController.RecordOrUpdatePlayer(snake.Id, snake.Name, snake.Score);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.LogWarning($"Failed to update player in database: {ex.Message}");
+                        // Don't crash - just log and continue
+                    }
                 }
             }
 
@@ -537,15 +576,25 @@ public partial class SnakeGame : ComponentBase
 
     /// <summary>
     /// Disconnects client from the server and resets game state/join page.
-    /// TODO: Implement method
     /// </summary>
-    /// <returns></returns>
-    void Disconnect()
-    {
+    public void Disconnect()
+    { 
+        // Database: End the current game session
+        // This updates the game's EndTime and sets LeaveTime for any
+        // players who haven't already disconnected
+        try
+        {
+            _dbController.EndCurrentGame();
+            Logger.LogInformation("Ended game session in database");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning($"Failed to record game end in database: {ex.Message}");
+        }
+
         server.Disconnect();
         gameStarted = false;
         playPressed = false;
-        // TODO: When player disconnects, update the ending time in the games table entry
     }
 
 
@@ -557,6 +606,8 @@ public partial class SnakeGame : ComponentBase
     /// </summary>
     public void Dispose( )
     {
+        Disconnect();
+
         _jsModule.InvokeVoidAsync( "ToggleAnimation", false );
         Logger.LogDetailsBrief( LogLevel.Debug, "Dispose" );
     }
