@@ -93,60 +93,60 @@ public partial class SnakeGame : ComponentBase
      }
 
     private async void Connect()
+{
+    // Basic validation before we even try to connect
+    if (string.IsNullOrWhiteSpace(playerName))
     {
-        // Basic validation before we even try to connect
-        if (string.IsNullOrWhiteSpace(playerName))
+        errorMessage = "Please enter a name before playing.";
+        networkStatus = string.Empty;
+        playPressed = false;
+        await InvokeAsync(StateHasChanged);
+        return;
+    }
+
+    // Trim + enforce max length on the C# side too
+    var chosenName = playerName.Trim();
+    if (chosenName.Length > 16)
+    {
+        chosenName = chosenName[..16];
+    }
+
+    // Check against disallowed names (case-insensitive)
+    foreach (var banned in disallowedNames)
+    {
+        if (string.Equals(banned, chosenName, StringComparison.OrdinalIgnoreCase))
         {
-            errorMessage = "Please enter a name before playing.";
+            errorMessage = "That name is not allowed. Please pick a different one.";
             networkStatus = string.Empty;
             playPressed = false;
             await InvokeAsync(StateHasChanged);
             return;
         }
+    }
 
-        // Trim + enforce max length on the C# side too
-        var chosenName = playerName.Trim();
-        if (chosenName.Length > 16)
+    playPressed = true;
+    Logger.LogInformation("Connecting!");
+
+    await Task.Run(() =>
+    {
+        errorMessage = string.Empty;
+        networkStatus = "Connecting...";
+        InvokeAsync(StateHasChanged);
+
+        try
         {
-            chosenName = chosenName[..16];
+            server.Connect("localhost", 11000);
+            networkStatus = "Connected";
+            connectTime = DateTime.Now;
         }
-
-        // Check against disallowed names (case-insensitive)
-        foreach (var banned in disallowedNames)
+        catch (Exception e)
         {
-            if (string.Equals(banned, chosenName, StringComparison.OrdinalIgnoreCase))
-            {
-                errorMessage = "That name is not allowed. Please pick a different one.";
-                networkStatus = string.Empty;
-                playPressed = false;
-                await InvokeAsync(StateHasChanged);
-                return;
-            }
-        }
-
-        playPressed = true;
-        Logger.LogInformation("Connecting!");
-
-        await Task.Run(() =>
-        {
-            errorMessage = string.Empty;
-            networkStatus = "Connecting...";
+            errorMessage = e.Message;
+            networkStatus = "Couldn't connect! Please refresh the page and try again.";
+            playPressed = false;
             InvokeAsync(StateHasChanged);
-
-            try
-            {
-                server.Connect("localhost", 11000);
-                networkStatus = "Connected";
-                connectTime = DateTime.Now;
-            }
-            catch (Exception e)
-            {
-                errorMessage = e.Message;
-                networkStatus = "Couldn't connect! Please refresh the page and try again.";
-                playPressed = false;
-                InvokeAsync(StateHasChanged);
-                return;
-            }
+            return;
+        }
 
             // Make startup info disappear
             networkStatus = string.Empty;
@@ -188,23 +188,29 @@ public partial class SnakeGame : ComponentBase
                         }
                     }
 
-                    Logger.LogTrace($"Received wall object {wall?.Id}");
-                }
-                else
-                {
-                    ProcessNonWallData(nextLine);
-                    break;
-                }
+            Logger.LogTrace($"Received wall object {wall?.Id}");
             }
-
-            // Main receive loop
-            while (true)
+            else
             {
-                string nextLine = server.ReceiveLine();
                 ProcessNonWallData(nextLine);
+                break;
             }
-        });
-    }
+        }
+
+        // Main receive loop
+        while (server.IsConnected)
+        {
+            string nextLine = server.ReceiveLine();
+            ProcessNonWallData(nextLine);
+        }
+
+        // Clean up after loop exits
+        errorMessage = "Disconnected!";
+        gameStarted = false;
+        playPressed = false;
+        InvokeAsync(StateHasChanged);
+    });
+}
 
     /// <summary>
     /// Adds data (that is not a wall) to the world model.
@@ -378,7 +384,7 @@ public partial class SnakeGame : ComponentBase
     }
 
     /// <summary>
-    /// Draws a snake on the canvas
+    /// Draws a snake on the canvas.
     /// </summary>
     /// <param name="snake"> The <see cref="Snake"/> object to draw. </param>
     async Task DrawSnake(Snake snake)
@@ -557,6 +563,11 @@ public partial class SnakeGame : ComponentBase
     [JSInvokable]
     public void HandleKeyPress(string key)
     {
+        if (key == "Escape")
+        {
+            HandleDisconnect();
+        }
+
         string? direction = key switch
         {
             "w" or "ArrowUp" => "up",
@@ -575,28 +586,31 @@ public partial class SnakeGame : ComponentBase
     }
 
     /// <summary>
-    /// Disconnects client from the server and resets game state/join page.
+    /// Handles disconnecting. Safely clears the world model and resets the game state variables.
     /// </summary>
-    public void Disconnect()
-    { 
-        // Database: End the current game session
-        // This updates the game's EndTime and sets LeaveTime for any
-        // players who haven't already disconnected
-        try
+    private void HandleDisconnect()
+    {
+        if (server.IsConnected)
         {
-            _dbController.EndCurrentGame();
-            Logger.LogInformation("Ended game session in database");
-        }
-        catch (Exception ex)
-        {
-            Logger.LogWarning($"Failed to record game end in database: {ex.Message}");
+            server.Disconnect();
         }
 
-        server.Disconnect();
+        // reset game state
         gameStarted = false;
         playPressed = false;
-    }
 
+        // clear the world
+        lock (worldModel)
+        {
+            worldModel = new World();
+        }
+
+        // create a new connection object for next time
+        server = new NetworkConnection(this.Logger);
+
+        // Update the UI
+        InvokeAsync(StateHasChanged);
+    }
 
     /// <summary>
     ///   Called by the system when the page is navigated away from.
@@ -606,7 +620,7 @@ public partial class SnakeGame : ComponentBase
     /// </summary>
     public void Dispose( )
     {
-        Disconnect();
+        HandleDisconnect();
 
         _jsModule.InvokeVoidAsync( "ToggleAnimation", false );
         Logger.LogDetailsBrief( LogLevel.Debug, "Dispose" );
