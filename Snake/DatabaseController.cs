@@ -15,7 +15,53 @@ public class DatabaseController
     /// <summary>
     /// The connection string for the database. (from secrets file)
     /// </summary>
-    private readonly string connectionString;
+    private string connectionString
+    {
+        get
+        {
+            var builder = new ConfigurationBuilder();
+
+            builder.AddUserSecrets<DatabaseController>();
+            IConfigurationRoot configuration = builder.Build();
+            var selectedSecrets = configuration.GetSection("DbSecrets");
+
+
+            return new SqlConnectionStringBuilder()
+            {
+                DataSource = selectedSecrets[ "Server" ],
+                InitialCatalog = selectedSecrets[ "Database" ],
+                UserID = selectedSecrets[ "User" ],
+                Password = selectedSecrets[ "Password" ],
+                ConnectTimeout = 15, // if the server doesn't connect in X seconds, give up
+                Encrypt = false
+            }.ConnectionString;
+        }
+    }
+
+    /// <summary>
+    /// Executes the given action with a connection to the database.
+    /// </summary>
+    /// <param name="action"></param>
+    private void ExectuteWithConnection(Action<SqlConnection> action)
+    {
+        using SqlConnection connection = new(connectionString);
+        connection.Open();
+        action(connection);
+    }
+
+    /// <summary>
+    /// Executes a query with a connection to the database and returns the result.
+    /// </summary>
+    /// <param name="query"></param>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
+    private T QueryWithConnection<T>(Func<SqlConnection, T> query)
+    {
+    using SqlConnection connection = new(connectionString);
+    connection.Open();
+    return query(connection);
+    }
+
 
     /// <summary>
     /// The ID of the current game session. Set when a new game is started.
@@ -26,16 +72,7 @@ public class DatabaseController
     /// Tracks which snake IDs have already been recorded in the database for this game session.
     /// Key: snake ID, Value: the max score we've recorded for them.
     /// </summary>
-    private readonly Dictionary<int, int> recordedPlayers = new();
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="DatabaseController"/> class.
-    /// </summary>
-    /// <param name="connectionString">The SQL Server connection string.</param>
-    public DatabaseController(string connectionString)
-    {
-        this.connectionString = connectionString;
-    }
+    private Dictionary<int, int> recordedPlayers = new();
 
     /// <summary>
     /// Creates a new game session entry in the database and sets the CurrentGameId.
@@ -44,7 +81,18 @@ public class DatabaseController
     /// <returns>The ID of the newly created game.</returns>
     public int StartNewGame()
     {
-        throw new NotImplementedException();
+        string startTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+
+        currentGameId = QueryWithConnection(connection =>
+        {
+            string insertQuery = "INSERT INTO Games (startTime) OUTPUT INSERTED.GameId VALUES (@startTime)";
+            using SqlCommand command = new(insertQuery, connection);
+            command.Parameters.AddWithValue("@startTime", startTime);
+            return Convert.ToInt32(command.ExecuteScalar());
+        });
+        recordedPlayers.Clear();
+
+        return currentGameId;
     }
 
     /// <summary>
@@ -53,7 +101,16 @@ public class DatabaseController
     /// </summary>
     public void EndCurrentGame()
     {
-        //
+        string endTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+
+        ExectuteWithConnection(connection =>
+        {
+            string updateQuery = "UPDATE Games SET endTime = @endTime WHERE GameId = @GameId";
+            using SqlCommand command = new(updateQuery, connection);
+            command.Parameters.AddWithValue("@endTime", endTime);
+            command.Parameters.AddWithValue("@GameId", currentGameId);
+            command.ExecuteNonQuery();
+        });
     }
 
     /// <summary>
@@ -63,17 +120,51 @@ public class DatabaseController
     /// <param name="snakeId">The snake's unique ID from the server.</param>
     /// <param name="name">The snake's name.</param>
     /// <param name="score">The snake's current score.</param>
-    public void RecordOrUpdatePlayer(int snakeId, string name, int score)
+    public void RecordOrUpdatePlayer(Snake snake)
     {
-       //
+        // TODO
+        // Check if snakeId is already in the dictionary, if not, call InsertNewPlayer
+        // If it is, call UpdatePlayerMaxScore
+        if (!recordedPlayers.ContainsKey(snake.Id))
+        {
+            InsertNewPlayer(snake);
+            return;
+        }
+
+        if (snake.Score > recordedPlayers[ snake.Id ])
+        {
+            UpdatePlayerMaxScore(snake.Id, snake.Score);
+        }
+
+        if (snake.Disconnected)
+        {
+            RecordPlayerDisconnect(snake.Id);
+        }
     }
 
     /// <summary>
     /// Inserts a new player into the Players table.
     /// </summary>
-    private void InsertNewPlayer(int snakeId, string name, int score)
+    private void InsertNewPlayer(Snake snake)
     {
-        //
+        // TODO: Insert a new row into the Players table
+        string enterTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+
+        ExectuteWithConnection(connection =>
+        {
+            string insertQuery =
+                "INSERT INTO Players (snakeId, name, score, enterTime) VALUES (@snakeId, @name, @score, @enterTime)";
+
+            using SqlCommand command = new(insertQuery, connection);
+            command.Parameters.AddWithValue("@snakeId", snake.Id);
+            command.Parameters.AddWithValue("@name", snake.Name);
+            command.Parameters.AddWithValue("@score", snake.Score);
+            command.Parameters.AddWithValue("@enterTime", enterTime);
+            command.ExecuteNonQuery();
+        });
+
+        // TODO: Add snakeId/score to the dictionary
+        recordedPlayers[ snake.Id ] = snake.Score;
     }
 
     /// <summary>
@@ -81,7 +172,17 @@ public class DatabaseController
     /// </summary>
     private void UpdatePlayerMaxScore(int snakeId, int newMaxScore)
     {
-       //
+        ExectuteWithConnection(connection =>
+            {
+                string updateQuery = "UPDATE Players SET score = @MaxScore WHERE snakeId = @PlayerId";
+                using SqlCommand command = new(updateQuery, connection);
+                command.Parameters.AddWithValue("@MaxScore", newMaxScore);
+                command.Parameters.AddWithValue("@PlayerId", snakeId);
+                command.ExecuteNonQuery();
+
+            });
+
+        recordedPlayers[ snakeId ] = newMaxScore;
     }
 
     /// <summary>
@@ -89,8 +190,19 @@ public class DatabaseController
     /// Should be called when a snake's "dc" property is true.
     /// </summary>
     /// <param name="snakeId">The snake's unique ID.</param>
-    public void RecordPlayerDisconnect(int snakeId)
+    public void RecordPlayerDisconnect(int snake)
     {
-        //
+        string leaveTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+
+        ExectuteWithConnection(connection =>
+        {
+            string updateQuery = "UPDATE Players SET leaveTime = @leaveTime WHERE snakeId = @snakeId";
+
+            using SqlCommand command = new(updateQuery, connection);
+            command.Parameters.AddWithValue("@leaveTime", leaveTime);
+            command.Parameters.AddWithValue("@snakeId", snake);
+
+            command.ExecuteNonQuery();
+        });
     }
 }

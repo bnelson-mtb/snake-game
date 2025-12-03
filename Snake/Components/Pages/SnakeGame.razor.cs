@@ -57,11 +57,7 @@ public partial class SnakeGame : ComponentBase
     private static readonly string[] disallowedNames = new[] { "wall", "snake", "power" };
 
     // Database controller
-    // TODO: Replace with connection string from secrets file
-    private static readonly string ConnectionString = 
-        "Server=;Database=;User Id=;Password=;TrustServerCertificate=True;";
-
-    private readonly DatabaseController dbController = new(ConnectionString);
+    private readonly DatabaseController dbController = new();
 
     /// <summary>
     ///   First step in the Blazor Page Life Cycle.  In some circumstances
@@ -160,7 +156,6 @@ public partial class SnakeGame : ComponentBase
         playerId = int.Parse(server.ReceiveLine());
         worldSize = int.Parse(server.ReceiveLine());
 
-        
         // TODO
         // Database: Start a new game session
         // This is when the client first connects, so we create a game entry
@@ -244,19 +239,15 @@ public partial class SnakeGame : ComponentBase
                     // If "dc" property is true, update leave time in players table
                     try
                     {
-                        // Check if snake disconnected
+                        dbController.RecordOrUpdatePlayer(snake);
+
+                        // Check if snake disconnected, if so, remove from world model
                         if (snake.Disconnected)
                         {
                             worldModel.Snakes.Remove(snake.Id);
-                            dbController.RecordPlayerDisconnect(snake.Id);
-                            Logger.LogTrace($"Recorded disconnect for snake {snake.Id}");
-                        }
-                        else
-                        {
-                            // Record or update the player (handles both new and existing)
-                            dbController.RecordOrUpdatePlayer(snake.Id, snake.Name, snake.Score);
                         }
                     }
+
                     catch (Exception ex)
                     {
                         Logger.LogWarning($"Failed to update player in database: {ex.Message}");
@@ -624,6 +615,16 @@ public partial class SnakeGame : ComponentBase
         InvokeAsync(StateHasChanged);
 
         // TODO: When player disconnects, update the ending time in the games table entry
+        try
+        {
+            dbController.EndCurrentGame();
+            Logger.LogInformation($"Ended game session with ID: {dbController.currentGameId}");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning($"Failed to record game end in database: {ex.Message}");
+            // Don't crash - just log and continue
+        }
     }
 
     /// <summary>
