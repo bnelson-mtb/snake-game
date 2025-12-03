@@ -201,8 +201,16 @@ public partial class SnakeGame : ComponentBase
         // Main receive loop
         while (server.IsConnected)
         {
-            string nextLine = server.ReceiveLine();
-            ProcessNonWallData(nextLine);
+            try
+            {
+                string nextLine = server.ReceiveLine();
+                ProcessNonWallData(nextLine);
+            }
+            catch (Exception e)
+            {
+                Logger.LogWarning("Exception caught in receive loop: {1}", e.Message);
+            }
+
         }
 
         // Clean up after loop exits
