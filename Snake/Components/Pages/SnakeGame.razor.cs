@@ -245,6 +245,7 @@ public partial class SnakeGame : ComponentBase
                         if (snake.Disconnected)
                         {
                             worldModel.Snakes.Remove(snake.Id);
+                            dbController.RecordPlayerDisconnect(snake.Id);
                         }
                     }
 
@@ -614,10 +615,10 @@ public partial class SnakeGame : ComponentBase
         // Update the UI
         InvokeAsync(StateHasChanged);
 
-        // TODO: When player disconnects, update the ending time in the games table entry
         try
         {
             dbController.EndCurrentGame();
+            dbController.RecordPlayerDisconnect(playerId);
             Logger.LogInformation($"Ended game session with ID: {dbController.currentGameId}");
         }
         catch (Exception ex)
