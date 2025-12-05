@@ -10,6 +10,8 @@ using CS3500.Networking;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.JSInterop;
+using CS3500.DatabaseController;
+using Snake;
 
 namespace Snake.Components.Pages;
 
@@ -131,7 +133,7 @@ public partial class SnakeGame : ComponentBase
 
         try
         {
-            server.Connect("localhost", 11000);
+            server.Connect("100.78.174.102", 11000);
             networkStatus = "Connected";
             connectTime = DateTime.Now;
         }

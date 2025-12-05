@@ -66,8 +66,8 @@ public sealed class NetworkConnection : IDisposable
         {
             // Only establish the reader/writer if the provided TcpClient is already connected.
             var stream = _tcpClient.GetStream();
-            _reader = new StreamReader(stream, Encoding.UTF8);
-            _writer = new StreamWriter(stream, Encoding.UTF8) { AutoFlush = true };
+            _reader = new StreamReader(stream, new UTF8Encoding(false));
+            _writer = new StreamWriter(tcpClient.GetStream(), new UTF8Encoding(false)) { AutoFlush = true };
             _logger.LogDebug("Initialized NetworkConnection with pre-connected TcpClient.");
         }
     }
@@ -119,8 +119,8 @@ public sealed class NetworkConnection : IDisposable
         _tcpClient.Connect(host, port);
 
         var stream = _tcpClient.GetStream();
-        _reader = new StreamReader(stream, Encoding.UTF8);
-        _writer = new StreamWriter(stream, Encoding.UTF8) { AutoFlush = true };
+        _reader = new StreamReader(stream, new UTF8Encoding(false));
+        _writer = new StreamWriter(stream, new UTF8Encoding(false)) { AutoFlush = true };
         _logger.LogInformation("Connected to {Host}:{Port}.", host, port);
     }
 

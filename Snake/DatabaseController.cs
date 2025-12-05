@@ -4,7 +4,7 @@
 
 using Microsoft.Data.SqlClient;
 
-namespace Snake;
+namespace CS3500.DatabaseController;
 
 /// <summary>
 /// Handles all database operations for tracking games and players.
@@ -120,7 +120,7 @@ public class DatabaseController
     /// <param name="snakeId">The snake's unique ID from the server.</param>
     /// <param name="name">The snake's name.</param>
     /// <param name="score">The snake's current score.</param>
-    public void RecordOrUpdatePlayer(Snake snake)
+    public void RecordOrUpdatePlayer(Snake.Snake snake)
     {
         // Check if snakeId is already in the dictionary, if not, call InsertNewPlayer
         // If it is, call UpdatePlayerMaxScore
@@ -144,7 +144,7 @@ public class DatabaseController
     /// <summary>
     /// Inserts a new player into the Players table.
     /// </summary>
-    private void InsertNewPlayer(Snake snake)
+    private void InsertNewPlayer(Snake.Snake snake)
     {
         string enterTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 
@@ -204,6 +204,79 @@ public class DatabaseController
             command.Parameters.AddWithValue("@GameId", currentGameId);
 
             command.ExecuteNonQuery();
+        });
+    }
+
+    /// <summary>
+    /// Gets all games from the database.
+    /// </summary>
+    /// <returns>List of tuples containing (Id, StartTime, EndTime).</returns>
+    public List<(int Id, DateTime StartTime, DateTime? EndTime)> GetAllGames()
+    {
+        return QueryWithConnection(connection =>
+        {
+            var games = new List<(int Id, DateTime StartTime, DateTime? EndTime)>();
+            string query = "SELECT Id, StartTime, EndTime FROM Games ORDER BY Id";
+
+            using SqlCommand command = new(query, connection);
+            using SqlDataReader reader = command.ExecuteReader();
+
+            while (reader.Read())
+            {
+                int id = reader.GetInt32(0);
+                DateTime startTime = reader.GetDateTime(1);
+                DateTime? endTime = reader.IsDBNull(2) ? null : reader.GetDateTime(2);
+                games.Add((id, startTime, endTime));
+            }
+
+            return games;
+        });
+    }
+
+    /// <summary>
+    /// Gets all players for a specific game.
+    /// </summary>
+    /// <param name="gameId">The game ID.</param>
+    /// <returns>List of tuples containing (PlayerId, Name, MaxScore, EnterTime, LeaveTime).</returns>
+    public List<(int PlayerId, string Name, int MaxScore, DateTime EnterTime, DateTime? LeaveTime)> GetPlayersForGame(int gameId)
+    {
+        return QueryWithConnection(connection =>
+        {
+            var players = new List<(int PlayerId, string Name, int MaxScore, DateTime EnterTime, DateTime? LeaveTime)>();
+            string query = "SELECT PlayerId, Name, MaxScore, EnterTime, LeaveTime FROM Players WHERE GameId = @GameId ORDER BY PlayerId";
+
+            using SqlCommand command = new(query, connection);
+            command.Parameters.AddWithValue("@GameId", gameId);
+            using SqlDataReader reader = command.ExecuteReader();
+
+            while (reader.Read())
+            {
+                int playerId = reader.GetInt32(0);
+                string name = reader.GetString(1);
+                int maxScore = reader.GetInt32(2);
+                DateTime enterTime = reader.GetDateTime(3);
+                DateTime? leaveTime = reader.IsDBNull(4) ? null : reader.GetDateTime(4);
+                players.Add((playerId, name, maxScore, enterTime, leaveTime));
+            }
+
+            return players;
+        });
+    }
+
+    /// <summary>
+    /// Checks if a game with the given ID exists.
+    /// </summary>
+    /// <param name="gameId">The game ID to check.</param>
+    /// <returns>True if the game exists, false otherwise.</returns>
+    public bool GameExists(int gameId)
+    {
+        return QueryWithConnection(connection =>
+        {
+            string query = "SELECT COUNT(*) FROM Games WHERE Id = @Id";
+
+            using SqlCommand command = new(query, connection);
+            command.Parameters.AddWithValue("@Id", gameId);
+            return Convert.ToInt32(command.ExecuteScalar()) > 0;
         });
     }
 }
