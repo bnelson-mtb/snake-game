@@ -133,7 +133,7 @@ public partial class SnakeGame : ComponentBase
 
         try
         {
-            server.Connect("100.78.174.102", 11000);
+            server.Connect("localhost", 11000);
             networkStatus = "Connected";
             connectTime = DateTime.Now;
         }
