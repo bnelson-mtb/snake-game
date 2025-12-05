@@ -19,9 +19,11 @@ public class Program
         {
             TcpClient client = listener.AcceptTcpClient();
 
-            NetworkStream stream = client.GetStream();
-            StreamReader reader = new StreamReader(stream, new UTF8Encoding(false));
-            StreamWriter writer = new StreamWriter(stream, new UTF8Encoding(false)) { AutoFlush = true };
+            new Thread(() =>
+            { 
+                NetworkStream stream = client.GetStream();
+                StreamReader reader = new StreamReader(stream, new UTF8Encoding(false));
+                StreamWriter writer = new StreamWriter(stream, new UTF8Encoding(false)) { AutoFlush = true };
 
             // Read the first line to get the request
             string requestLine = reader.ReadLine()!;
@@ -91,8 +93,9 @@ public class Program
             response += "\r\n";
             response += html;
 
-            writer.Write(response);
-            client.Close();
+                writer.Write(response);
+                client.Close();
+            }).Start();
         }
     }
 }

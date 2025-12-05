@@ -243,7 +243,7 @@ public class DatabaseController
         return QueryWithConnection(connection =>
         {
             var players = new List<(int PlayerId, string Name, int MaxScore, DateTime EnterTime, DateTime? LeaveTime)>();
-            string query = "SELECT PlayerId, Name, MaxScore, EnterTime, LeaveTime FROM Players WHERE GameId = @GameId ORDER BY PlayerId";
+            string query = "SELECT PlayerId, Name, MaxScore, EnterTime, LeaveTime FROM Players WHERE GameId = @GameId ORDER BY MaxScore DESC, PlayerId";
 
             using SqlCommand command = new(query, connection);
             command.Parameters.AddWithValue("@GameId", gameId);
