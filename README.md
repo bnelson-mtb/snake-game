@@ -4,7 +4,7 @@ Start Date: 11/5/25
 Course: CS 3500, University of Utah, School of Computing
 GitHub IDs: bnelson-mtb & big-chuz
 Repo: https://github.com/uofu-cs3500-20-fall2025/assignment-eight-chatting-brady_charlie_game
-Commit Date: 11/22/25
+Commit Date: 12/4/25
 Solution: Chatting
 Copyright: CS 3500, Brady Nelson, Charles Adair
 This work may not be copied for use in Academic Coursework.
@@ -21,7 +21,7 @@ client-server gameplay loop where the server controls the game logic and the cli
 # Time Expenditures:
 1. Assignment Eight - Predicted Hours: 5 - Actual Hours: 5
 2. Assignment Nine - Predicted Hours: 12 - Actual Hours: 15
-
+3. Assignment Ten - Predicted Hours: 6 - Actual Hours:
 
 # Use of AI*
 **Google NotebookLM**: Used to rephrase and better explain assignment instructions and lectures slides.
