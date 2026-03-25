@@ -1,0 +1,353 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>GUI.Client</name>
+    </assembly>
+    <members>
+        <member name="T:CS3500.Networking.NetworkConnection">
+            <summary>
+              Wraps the StreamReader/writer/TcpClient together so we
+              don't have to keep creating all three for network actions.
+            </summary>
+        </member>
+        <member name="F:CS3500.Networking.NetworkConnection._tcpClient">
+            <summary>
+              The true networking object.
+            </summary>
+        </member>
+        <member name="F:CS3500.Networking.NetworkConnection._reader">
+            <summary>
+              Ability to read from the tcpClient.
+            </summary>
+        </member>
+        <member name="F:CS3500.Networking.NetworkConnection._writer">
+            <summary>
+              Ability to write to the tcpClient.
+            </summary>
+        </member>
+        <member name="M:CS3500.Networking.NetworkConnection.#ctor(System.Net.Sockets.TcpClient)">
+            <summary>
+              Initializes a new instance of the <see cref="T:CS3500.Networking.NetworkConnection"/> class.
+              <para>
+                Create a network connection object.
+              </para>
+            </summary>
+            <param name="tcpClient">
+              An already existing TcpClient
+            </param>
+        </member>
+        <member name="M:CS3500.Networking.NetworkConnection.#ctor">
+            <summary>
+              Initializes a new instance of the <see cref="T:CS3500.Networking.NetworkConnection"/> class.
+              <para>
+                Create a network connection object.  The tcpClient will be unconnected at the start.
+              </para>
+            </summary>
+        </member>
+        <member name="P:CS3500.Networking.NetworkConnection.IsConnected">
+            <summary>
+            Gets a value indicating whether the socket is connected.
+            </summary>
+        </member>
+        <member name="M:CS3500.Networking.NetworkConnection.Connect(System.String,System.Int32)">
+            <summary>
+              Try to connect to the given host:port. Allow users to cancel if they want
+              by using the cancellationToken.
+            </summary>
+            <param name="host"> The URL or IP address, e.g., www.cs.utah.edu, or  123.201.51.5. </param>
+            <param name="port"> The port, e.g., 11000. </param>
+            <remarks>
+              Cannot be canceled.
+            </remarks>
+        </member>
+        <member name="M:CS3500.Networking.NetworkConnection.Send(System.String)">
+            <summary>
+              Send a message to the remote server.  If the <paramref name="message"/> contains
+              new lines, these will be treated on the receiving side as multiple messages.
+              This method should attach a newline to the end of the <paramref name="message"/>
+              Your <paramref name="message"/> should normally not contain an ending newline.
+            </summary>
+            <param name="message"> The string of characters to send. </param>
+        </member>
+        <member name="M:CS3500.Networking.NetworkConnection.ReadLine">
+            <summary>
+              Read a message from the other side of the socket.  The message will contain
+              all characters up to the first new line. See <see cref="M:CS3500.Networking.NetworkConnection.Send(System.String)"/>.
+            </summary>
+            <returns> The contents of the message. </returns>
+        </member>
+        <member name="M:CS3500.Networking.NetworkConnection.Disconnect">
+            <summary>
+              If connected, disconnect and clean up.
+            </summary>
+        </member>
+        <member name="M:CS3500.Networking.NetworkConnection.Dispose">
+            <summary>
+              Automatically called with using statement.
+            </summary>
+        </member>
+        <member name="T:CS3500.Networking.Server">
+            <summary>
+              Represents a server task that waits for connections on a given
+              port and calls the delegate when a connection is made.
+            </summary>
+        </member>
+        <member name="M:CS3500.Networking.Server.StartServer(System.Action{CS3500.Networking.NetworkConnection},System.Int32)">
+            <summary>
+              Wait on a TcpListener for new connections. "Alert" the main program
+              via a callback mechanism.
+            </summary>
+            <param name="handleConnect">
+              Handler for what the program wants to do when a connection is made.
+              This should be run asynchronously via a new thread.
+            </param>
+            <param name="port"> The port (e.g., 11000) to listen on. </param>
+        </member>
+        <member name="M:CS3500.SnakeGame.NetworkController.FinishGame">
+            <summary>
+            Updates the end timestamp for the db entry for this game
+            Also closes the network connection with the game server
+            </summary>
+        </member>
+        <member name="M:CS3500.SnakeGame.NetworkController.AddGameToDB">
+            <summary>
+            Adds a new row to the Games table in the database 
+            and gets this game's ID
+            </summary>
+        </member>
+        <member name="M:CS3500.SnakeGame.NetworkController.UpdateScore(CS3500.SnakeGame.Snake)">
+            <summary>
+            Updates the max score in the database for the given snake in this game
+            </summary>
+            <param name="s"></param>
+        </member>
+        <member name="M:CS3500.SnakeGame.NetworkController.DisconnectSnake(CS3500.SnakeGame.Snake)">
+            <summary>
+            Updates the leave time in the database for the given snake in this game
+            </summary>
+            <param name="s"></param>
+        </member>
+        <member name="M:CS3500.SnakeGame.NetworkController.AddSnake(CS3500.SnakeGame.Snake)">
+            <summary>
+            Adds a new snake to the database for this game
+            </summary>
+            <param name="s"></param>
+        </member>
+        <member name="T:CS3500.SnakeGame.Apple">
+            <summary>
+            A class to represent a wall section
+            </summary>
+        </member>
+        <member name="M:CS3500.SnakeGame.Apple.#ctor">
+            <summary>
+              Initializes a new instance of the <see cref="T:CS3500.SnakeGame.Apple"/> class.
+            </summary>
+        </member>
+        <member name="T:CS3500.SnakeGame.Snake">
+            <summary>
+              FIXME.nsake
+            </summary>
+        </member>
+        <member name="P:CS3500.SnakeGame.Snake.Disconnect">
+            <summary>
+             Disconnect property
+            </summary>
+        </member>
+        <member name="P:CS3500.SnakeGame.Snake.Join">
+            <summary>
+              True first time
+            </summary>
+        </member>
+        <member name="P:CS3500.SnakeGame.Snake._bodyXF">
+            <summary>
+              Hack for using floating point snakes from server.
+              hoepfully will be fixed soon.
+            </summary>
+        </member>
+        <member name="P:CS3500.SnakeGame.Snake._body">
+            <summary>
+              The snake's body, where the first point is the head and the last
+              is the tail.
+            </summary>
+        </member>
+        <member name="F:CS3500.SnakeGame.Snake.down">
+            <summary>
+              Down direction.
+            </summary>
+        </member>
+        <member name="F:CS3500.SnakeGame.Snake.up">
+            <summary>
+              Up direction.
+            </summary>
+        </member>
+        <member name="F:CS3500.SnakeGame.Snake.right">
+            <summary>
+              Right direction.
+            </summary>
+        </member>
+        <member name="F:CS3500.SnakeGame.Snake.left">
+            <summary>
+              Left direction.
+            </summary>
+        </member>
+        <member name="M:CS3500.SnakeGame.Snake.#ctor(CS3500.SnakeGame.XY,CS3500.SnakeGame.XY)">
+            <summary>
+              Initializes a new instance of the <see cref="T:CS3500.SnakeGame.Snake"/> class.
+            </summary>
+            <param name="initialHead"> Starting Head Location. </param>
+            <param name="initialTail"> Staring End of Tail Location. </param>
+        </member>
+        <member name="M:CS3500.SnakeGame.Snake.#ctor">
+            <summary>
+              Initializes a new instance of the <see cref="T:CS3500.SnakeGame.Snake"/> class.
+              from 0,0 to 1,1.
+            </summary>
+        </member>
+        <member name="P:CS3500.SnakeGame.Snake.Head">
+            <summary>
+              Gets or sets the front of the snake.
+            </summary>
+        </member>
+        <member name="P:CS3500.SnakeGame.Snake.Tail">
+            <summary>
+              Gets or sets the final segment of the snake.
+            </summary>
+        </member>
+        <member name="P:CS3500.SnakeGame.Snake.Shoulder">
+            <summary>
+              Gets the second segment of the snake (the one directly before
+              the head), i.e., the shoulder.
+            </summary>
+        </member>
+        <member name="P:CS3500.SnakeGame.Snake.Hips">
+            <summary>
+              Gets the second to last segment of the snake (the one directly after the
+              the tail), i.e., the hips.
+            </summary>
+        </member>
+        <member name="P:CS3500.SnakeGame.Snake.Direction">
+            <summary>
+              Gets the current direction of the snake, which is the vector from the
+              second segment (shoulder) to the head.
+            </summary>
+            <remarks>
+              The direction is the normalized difference between the head and the
+              shoulder (second segment).
+            </remarks>
+        </member>
+        <member name="P:CS3500.SnakeGame.Snake.TailDirection">
+            <summary>
+              Gets the current direction of the TAIL segment of the snake,
+              which is the vector from the tail to the next element.
+            </summary>
+            <remarks>
+              The direction is the normalized.
+            </remarks>
+        </member>
+        <member name="P:CS3500.SnakeGame.Snake.Body">
+            <summary>
+              Gets the points in the snake.
+            </summary>
+            <returns> The list of points in the snake. </returns>
+        </member>
+        <member name="M:CS3500.SnakeGame.Snake.ToString">
+            <summary>
+              A simple representation for debugging.
+            </summary>
+            <returns> A string representation of the snake. </returns>
+        </member>
+        <member name="M:CS3500.SnakeGame.Snake.MoveForward">
+            <summary>
+              Moves the snake forward by one unit in the current direction.
+            </summary>
+            <remarks>
+              The movement involves calculating the new position of the head and adjusting the rest of the body accordingly.
+              The tail moves to follow the body segments.
+            </remarks>
+        </member>
+        <member name="M:CS3500.SnakeGame.Snake.ChangeDirection(System.String)">
+            <summary>
+              FIXME.
+            </summary>
+            <param name="direction"> like UpArrow </param>
+        </member>
+        <member name="T:CS3500.SnakeGame.Wall">
+            <summary>
+            A class to represent a wall section
+            </summary>
+        </member>
+        <member name="M:CS3500.SnakeGame.Wall.#ctor">
+            <summary>
+              Initializes a new instance of the <see cref="T:CS3500.SnakeGame.Wall"/> class.
+            </summary>
+        </member>
+        <member name="M:CS3500.SnakeGame.Wall.#ctor(System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+              Initializes a new instance of the <see cref="T:CS3500.SnakeGame.Wall"/> class.
+            </summary>
+        </member>
+        <member name="M:CS3500.SnakeGame.Wall.Init">
+            <summary>
+            Since the JSON deserializer uses the default constructor, 
+            then sets values directly, there's no good way to ensure 
+            min/max x/y get set.
+            A better solution would be to make p1 and p2 properties,
+            and update these values in the p1/p2 setter
+            </summary>
+        </member>
+        <member name="T:CS3500.SnakeGame.World">
+            <summary>
+            Represents the game world that contains snakes, apples, and walls.
+            </summary>
+        </member>
+        <member name="M:CS3500.SnakeGame.World.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:CS3500.SnakeGame.World"/> class.
+            Sets up the world with boundaries and random apples.
+            </summary>
+        </member>
+        <member name="M:CS3500.SnakeGame.XY.op_Addition(CS3500.SnakeGame.XY,CS3500.SnakeGame.XY)">
+            <summary>
+              FIXME.
+            </summary>
+            <param name="p1"></param>
+            <param name="p2"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CS3500.SnakeGame.XY.op_Subtraction(CS3500.SnakeGame.XY,CS3500.SnakeGame.XY)">
+            <summary>
+              FIXME.
+            </summary>
+            <param name="p1"></param>
+            <param name="p2"></param>
+            <returns></returns>
+        </member>
+        <member name="M:CS3500.SnakeGame.XY.op_Division(CS3500.SnakeGame.XY,System.Int32)">
+            <summary>
+              FIXME.
+            </summary>
+            <param name="p1"></param>
+            <param name="p2"></param>
+            <returns></returns>
+        </member>
+        <member name="T:GUI.Client.Pages.SnakeGUI">
+            <summary>
+              FIXME.
+            </summary>
+        </member>
+        <member name="F:GUI.Client.Pages.SnakeGUI.zoomFactor">
+            <summary>
+              How zoomed in to be.
+            </summary>
+        </member>
+        <member name="M:GUI.Client.Pages.SnakeGUI.Draw(CS3500.SnakeGame.World,Blazor.Extensions.Canvas.Canvas2D.Canvas2DContext)">
+            <summary>
+              FIXME.
+            </summary>
+            <param name="world"> World Model. </param>
+            <param name="context"> Graphics Context. </param>
+            <param name="zoomFactor"> how much to zoom in. </param>
+            <returns> Task For use with async. </returns>
+        </member>
+    </members>
+</doc>
