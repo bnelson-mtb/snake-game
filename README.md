@@ -32,3 +32,48 @@ displays game statistics.
 ```
 * See individual project READMEs for more detailed descriptions on the use of AI.
 ```
+
+---
+
+# Running the Project
+
+> **Note:** This is a university course project (CS 3500, University of Utah). Because of that, it is **not fully plug-and-play**. The game server is a pre-compiled course-provided binary (Windows-only), and the stats database requires manual setup with credentials that are not included in this repo.
+
+## Prerequisites
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- Windows OS (the provided `GameServer/Server.exe` is Windows-only)
+- A SQL Server instance (for game statistics — optional, but the app will error on connect/disconnect without it)
+
+## Steps
+
+### 1. Start the Game Server
+Run the pre-compiled server from the `GameServer/` directory:
+```
+GameServer\Server.exe
+```
+This starts the game server on port `11000` (localhost).
+
+### 2. (Optional) Configure the Database
+The client records player stats to a SQL Server database. To enable this, set up [.NET user secrets](https://learn.microsoft.com/en-us/aspnet/core/security/app-secrets) in the `Snake/` project:
+```
+cd Snake
+dotnet user-secrets set "DbSecrets:Server" "<your-server>"
+dotnet user-secrets set "DbSecrets:Database" "<your-database>"
+dotnet user-secrets set "DbSecrets:User" "<your-username>"
+dotnet user-secrets set "DbSecrets:Password" "<your-password>"
+```
+If you skip this step, the app will still run but will throw errors when players connect or disconnect.
+
+### 3. Run the Blazor Client
+```
+cd Snake
+dotnet run
+```
+Then open your browser to the URL shown in the terminal (e.g., `https://localhost:5001`). Navigate to `/snake` to play.
+
+### 4. (Optional) Run the Web Server
+The web server displays per-session player statistics:
+```
+cd WebServer
+dotnet run
+```
